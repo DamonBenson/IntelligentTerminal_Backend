@@ -13,7 +13,7 @@ import {WORKTYPE} from "../utils/info.js";
  * @date 2021/5/31
  */
 export async function countGroupBy(table, byKey, endTimeStamp = null,startTimeStamp = null,
-                                   timeName = "completion_time", limit = 3){
+                                   timeName = "baseInfo_timestamp", limit = 3){
     let sqlRight = _sqlGroupBy(table, byKey , endTimeStamp , startTimeStamp ,timeName, limit);
     let sqlRes = await mysqlUtils.sql(c, sqlRight);
     let Res = {};
@@ -67,19 +67,19 @@ function _sqlGroupBy(table, byKey , endTimeStamp , startTimeStamp , timeName, li
  * @example:.
  *
  */
-export async function countNum(table, key="work_id", endTimeStamp = null,startTimeStamp = null) {
-    let sqlRight = _sqlNum(table, key, endTimeStamp,startTimeStamp);
+export async function countNum(table, key, endTimeStamp = null,startTimeStamp = null) {
+    let sqlRight = _sqlNum_InBackend(table, key, endTimeStamp,startTimeStamp);
     let sqlRes = await mysqlUtils.sql(c, sqlRight);
     return _getAnum_from_Res(sqlRes);
 }
 export async function countNumJoinRight(table, key, joinTable, joinKey, endTimeStamp = null,startTimeStamp = null) {
-    let sqlRight = _sqlNum(table, key, endTimeStamp, startTimeStamp,joinTable, joinKey,true,true);
+    let sqlRight = _sqlNum_InBackend(table, key, endTimeStamp, startTimeStamp,joinTable, joinKey,true,true);
     let sqlRes = await mysqlUtils.sql(c, sqlRight);
     return _getAnum_from_Res(sqlRes);
 
 }
 export async function countNumJoinRightAll(table, key, joinTable, joinKey, endTimeStamp = null,startTimeStamp = null) {
-    let sqlRight = _sqlNum(table, key, endTimeStamp, startTimeStamp,joinTable, joinKey,true,false);
+    let sqlRight = _sqlNum_InBackend(table, key, endTimeStamp, startTimeStamp,joinTable, joinKey,true,false);
     let sqlRes = await mysqlUtils.sql(c, sqlRight);
     return _getAnum_from_Res(sqlRes);
 
@@ -91,7 +91,8 @@ function _getAnum_from_Res(sqlRes) {
     );
     return Res;
 }
-function _sqlNum(table, key, endTimeStamp, startTimeStamp, joinTable=null, joinKey=null, inner_join = false, right = false) {
+
+function _sqlNum_InBackend(table, key, endTimeStamp, startTimeStamp, joinTable=null, joinKey=null, inner_join = false, right = false) {
     let sqlRight =util.format(
         'SELECT DISTINCT\n' +
         '\tCOUNT(%s.%s) AS num\n' +
@@ -100,6 +101,14 @@ function _sqlNum(table, key, endTimeStamp, startTimeStamp, joinTable=null, joinK
         table,key,
         table);
     if(inner_join){
+        let joinKeyA = joinKey;
+        let joinKeyB = joinKey;
+
+        if(joinKey == "baseInfo_workId"){
+            joinKeyA = table=="CopyrightToken"?"TokenId":"baseInfo_workId";
+            joinKeyB = joinTable=="CopyrightToken"?"TokenId":"baseInfo_workId";
+
+        }
         sqlRight = sqlRight+util.format(
             '\tINNER JOIN\n' +
             '\t(\n' +
@@ -108,16 +117,16 @@ function _sqlNum(table, key, endTimeStamp, startTimeStamp, joinTable=null, joinK
             '\tON \n' +
             '\t\t%s.%s = %s.%s\n',
             joinTable,
-            table,joinKey,joinTable,joinKey);
+            table,joinKeyA,joinTable,joinKeyB);
     }
     if(endTimeStamp != null){
         sqlRight = sqlRight+util.format(
             '\t\tWHERE\n' +
-            '\t\t\twork_info.completion_time <= %s AND\n' +
-            '\t\t\twork_info.completion_time > %s\n',
+            '\t\t\tToken.baseInfo_timestamp <= %s AND\n' +
+            '\t\t\tToken.baseInfo_timestamp > %s\n',
             endTimeStamp,startTimeStamp);
         if(right==true){//确权
-            sqlRight = sqlRight+'\tAND right_token_info.copyright_type = 1 \n';
+            sqlRight = sqlRight+'\tAND CopyrightToken.copyrightType = 1 \n';
         }
     }
     return sqlRight;

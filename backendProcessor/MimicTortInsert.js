@@ -61,7 +61,7 @@ async function MimicTortInsert() {
  */
 export async function generateTort() {
     let offset = localUtils.randomNumber(1, 7800);
-    let sql = sqlText.table('work_info').limit(offset, 1).field(['work_id']).select()
+    let sql = sqlText.table('Token').limit(offset, 1).field(['work_id']).select()
     let Res = await mysqlUtils.sql(c, sql);
     return Res;
 }

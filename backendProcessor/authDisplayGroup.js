@@ -14,13 +14,9 @@ import util from 'util';
 
 import mysql from 'mysql';
 import {c} from "../MidBackend.js";
-import {debugMode, CREATIONTYPE} from '../utils/info.js';
+import {debugMode, WORKTYPE, CREATIONTYPE} from '../utils/info.js';
 import {countGroupBy, countNumJoinRight, countNumJoinRightAll} from "./SelectUtil.js";
-const WORKTYPE = {
-    1:"音乐",2:"摄影",3:"短视频",4:"戏剧",5:"曲艺",
-    6:"舞蹈",7:"杂技艺术",8:"美术",9:"建筑",10:"文字",
-    11:"电影",12:"图形",13:"模型",14:"其他"
-};
+
 const CONNECT = true;// When false, Send Random Response
 // export{
 //     handleCertificateAmountEXchange,// 1）	存证总数量随时间的变化。
@@ -57,7 +53,7 @@ async function getCertificateAmountEXchange() {
     for (let index = 0; index < 12; index++) {
         let endTimeStamp = TimeStampArray[index];
         let startTimeStamp = TimeStampArray[(index + 1)];
-        let valueRes = await countNumJoinRight("right_token_info", "work_id", "work_info", "work_id",
+        let valueRes = await countNumJoinRight("CopyrightToken", "workId", "Token", "baseInfo_workId",
             endTimeStamp,startTimeStamp);
         if(CONNECT == false)valueRes = localUtils.randomNumber(30,50);
         let MonthInfo = {
@@ -85,7 +81,7 @@ async function getCertificateAmountGroupByWorkType() {
     let WorkTypeInfo = {};
 
     if(CONNECT == true){
-        let Res = await countGroupBy("work_info", "work_type");
+        let Res = await countGroupBy("Token", "baseInfo_workType");
         console.log("Res:",Res);
         let keys = Object.keys(Res);
         console.log("keys:",keys);
@@ -135,33 +131,46 @@ async function getCertificateAmountGroupByWorkTypeEXchange() {
     let WorkTypeInfo = {};
     // console.log([TimeStampArray, MonthArray]);
     if(CONNECT == true){
-        // TODO 确定选中的类型
         let index = 0;
         let endTimeStamp = TimeStampArray[index];
         let startTimeStamp = TimeStampArray[(index + 1)];
         console.log(TimeStampArray);
         let keys = [];
-        while(keys.length<3 && index<3){
+        while(keys.length<3 && index<3){//寻找出现最多的属性，如果当前季节找不到3个有效结果，则往前面的季节找。只调用1年的数据。
             endTimeStamp = TimeStampArray[index];
             startTimeStamp = TimeStampArray[(index + 1)];
-            let Res = await countGroupBy("work_info", "work_type", endTimeStamp ,startTimeStamp);
-            keys = Object.keys(Res);
+            let Res = await countGroupBy("Token", "baseInfo_workType", endTimeStamp ,startTimeStamp);
+            //寻找最大的季节
+            let TempKeys = Object.keys(Res);
+            if(TempKeys.length>keys){keys = Object.keys(Res)};
+            //只调用1年的数据
             index = index + SeasonGap;
         }
-        console.log(keys);
+        // keys不足补齐
+        if(keys.length<3){
+            let temp = 1;
+            while(keys.length<3){
+                if(keys.findIndex(function (nums) {return nums == temp})){
+                    keys.push(temp.toString());
+                }
+                temp++;
+            }
+            console.log("keys:",keys);
+        }
         for (let index = 0; index < 4; index = index + SeasonGap) {
             endTimeStamp = TimeStampArray[index];
             startTimeStamp = TimeStampArray[(index + 1)];
-            // let Res = await countGroupBy("work_info", "work_type",endTimeStamp ,startTimeStamp);
+            // let Res = await countGroupBy("Token", "baseInfo_workType",endTimeStamp ,startTimeStamp);
             let sqlRight = gen_SqlRight(endTimeStamp , startTimeStamp, keys);
             let sqlRes = await mysqlUtils.sql(c, sqlRight);
             let Res = {};
             sqlRes.forEach(value =>
-                Res[[value["work_type"]]] = value['num']
+                Res[[value["baseInfo_workType"]]] = value['num']
             );
             CertificateAmountGroupByWorkType =[];
             for (let i = 0, n = keys.length, key; i < n; ++i) {
                 key = keys[i];
+                //空返回补0
                 if(Res[key]==null)Res[key]=0;
                 let MonthInfo = {
                     "workType":WORKTYPE[key],
@@ -205,26 +214,26 @@ async function getCertificateAmountGroupByWorkTypeEXchange() {
     CertificateAmountGroupByWorkTypeEXchange.reverse();
     return CertificateAmountGroupByWorkTypeEXchange;
     function gen_SqlRight(endTimeStamp , startTimeStamp,workTypes) {
-        console.log(workTypes)
+        console.log("workTypes:",workTypes);
         return util.format("SELECT\n" +
             "\t*\n" +
             "FROM\n" +
             "\t(\n" +
             "\t\tSELECT\n" +
-            "\t\t\twork_info.work_type, \n" +
-            "\t\t\tCOUNT(work_info.work_id) AS num\n" +
+            "\t\t\tToken.baseInfo_workType, \n" +
+            "\t\t\tCOUNT(Token.baseInfo_workId) AS num\n" +
             "\t\tFROM\n" +
-            "\t\t\twork_info\n" +
+            "\t\t\tToken\n" +
             "\t\tWHERE\n" +
-            "\t\t\twork_info.completion_time <= %s AND\n" +
-            "\t\t\twork_info.completion_time > %s AND\n" +
+            "\t\t\tToken.baseInfo_timestamp <= %s AND\n" +
+            "\t\t\tToken.baseInfo_timestamp > %s AND\n" +
             "\t\t\t(\n" +
-            "\t\t\t  work_info.work_type = %s OR\n" +
-            "\t\t\t  work_info.work_type = %s OR\n" +
-            "\t\t\t  work_info.work_type = %s\n" +
+            "\t\t\t  Token.baseInfo_workType = %s OR\n" +
+            "\t\t\t  Token.baseInfo_workType = %s OR\n" +
+            "\t\t\t  Token.baseInfo_workType = %s\n" +
             "\t\t\t)\n" +
             "\t\tGROUP BY\n" +
-            "\t\t\twork_info.work_type\n" +
+            "\t\t\tToken.baseInfo_workType\n" +
             "\t) AS Type\n"
             ,endTimeStamp , startTimeStamp, workTypes[0], workTypes[1], workTypes[2])
 
@@ -246,7 +255,7 @@ async function getCopyRightAmountEXchange() {
     for (let index = 0; index < 12; index++) {
         let endTimeStamp = TimeStampArray[index];
         let startTimeStamp = TimeStampArray[(index + 1)];
-        let valueRes = await countNumJoinRightAll("right_token_info", "work_id", "work_info", "work_id",
+        let valueRes = await countNumJoinRightAll("CopyrightToken", "workId", "Token", "baseInfo_workId",
             endTimeStamp,startTimeStamp);
         let MonthInfo = {
             "CopyRightAmount": valueRes["num"],
@@ -271,9 +280,10 @@ export async function handleCopyRightAmountGroupByIDtype(req, res) {
     console.log('--------------------');
     return sqlRes;
 }
+//TODO 证件类型为何删除？
 async function getCopyRightAmountGroupByIDtype() {
     let CopyRightAmountGroupByIDtype = {};
-    if(CONNECT == false){
+    if(CONNECT == false & false){
         CopyRightAmountGroupByIDtype = {
             "个人账户数目" : localUtils.randomNumber(300,500),
             "非个人账户数目": localUtils.randomNumber(600,1000),
@@ -282,16 +292,16 @@ async function getCopyRightAmountGroupByIDtype() {
     else{
         let sqlRight =util.format(
             'SELECT\n' +
-            '\tCOUNT(right_token_info.copyright_id) AS num\n' +
+            '\tCOUNT(CopyrightToken.TokenId) AS num\n' +
             'FROM\n' +
-            '\tright_token_info\n' +
+            '\tCopyrightToken\n' +
             'WHERE\n' +
-            '\tright_token_info.id_type = 3 OR \n' +
-            '\tright_token_info.id_type = 5 OR \n' +
-            '\tright_token_info.id_type = 6 OR \n' +
-            '\tright_token_info.id_type = 7 OR \n' +
-            '\tright_token_info.id_type = 8 OR \n' +
-            '\tright_token_info.id_type = 9');
+            '\tCopyrightToken.id_type = 3 OR \n' +
+            '\tCopyrightToken.id_type = 5 OR \n' +
+            '\tCopyrightToken.id_type = 6 OR \n' +
+            '\tCopyrightToken.id_type = 7 OR \n' +
+            '\tCopyrightToken.id_type = 8 OR \n' +
+            '\tCopyrightToken.id_type = 9');
         console.log(sqlRight);
         let sqlRes = await mysqlUtils.sql(c, sqlRight);
         console.log(sqlRes);
@@ -301,13 +311,13 @@ async function getCopyRightAmountGroupByIDtype() {
         });
         sqlRight =util.format(
             'SELECT\n' +
-            '\tCOUNT(right_token_info.copyright_id) AS num\n' +
+            '\tCOUNT(CopyrightToken.TokenId) AS num\n' +
             'FROM\n' +
-            '\tright_token_info\n' +
+            '\tCopyrightToken\n' +
             'WHERE\n' +
-            '\tright_token_info.id_type = 1 OR \n' +
-            '\tright_token_info.id_type = 2 OR \n' +
-            '\tright_token_info.id_type = 4');
+            '\tCopyrightToken.id_type = 1 OR \n' +
+            '\tCopyrightToken.id_type = 2 OR \n' +
+            '\tCopyrightToken.id_type = 4');
         console.log(sqlRight);
         sqlRes = await mysqlUtils.sql(c, sqlRight);
         console.log(sqlRes);
@@ -342,14 +352,14 @@ async function getCopyRightAmountGroupByCopyrightType() {
     if(CONNECT == true){
         let sqlRight =util.format(
             'SELECT\n' +
-            '\tCOUNT(right_token_info.copyright_id) AS num, \n' +
-            '\tright_token_info.copyright_type\n' +
+            '\tCOUNT(CopyrightToken.TokenId) AS num, \n' +
+            '\tCopyrightToken.copyrightType\n' +
             'FROM\n' +
-            '\tright_token_info\n' +
+            '\tCopyrightToken\n' +
             'GROUP BY\n' +
-            '\tright_token_info.copyright_type\n' +
+            '\tCopyrightToken.copyrightType\n' +
             'ORDER BY\n' +
-            '\tright_token_info.copyright_type');
+            '\tCopyrightToken.copyrightType');
         console.log(sqlRight);
         let sqlRes = await mysqlUtils.sql(c, sqlRight);
         console.log(sqlRes);

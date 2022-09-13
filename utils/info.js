@@ -1,7 +1,7 @@
 import fs from 'fs';
 
-const TESTPICPATH = './resource/test.jpg'; // 测试相对于当前命令行所在目录的相对位置
-const TESTPIC = fs.readFileSync(TESTPICPATH);
+const picPath = './resource/test.jpg'; // 相对于当前命令行所在目录的相对位置
+const pic = fs.readFileSync(picPath);
 const userAccountIndex = {
     '智能预警系统发币账号': 0,
     '智能授权系统发币账号': 1,
@@ -18,55 +18,55 @@ const userAccountIndex = {
     '用户6': 12,
     '买方平台2': 13,
     '卖方平台2': 14
-    
+
 };
 const userAccount = [
     {
-      secret: 'ssyYuua1z4J312TNVrz4pqaZLs7yG',
-      address: 'j9uudceu9gX3DyLcTL7czGgUnfzP9fQxko'
+        secret: 'ssyYuua1z4J312TNVrz4pqaZLs7yG',
+        address: 'j9uudceu9gX3DyLcTL7czGgUnfzP9fQxko'
     }, // a[0]--智能预警系统发币账号
     {
-      secret: 'ssxNDn2zSdjXTDFkANWpKWctHYMHZ',
-      address: 'jNPZMZxYx1Gj9rRYadiTfLG5ypQTJgmLAm'
+        secret: 'ssxNDn2zSdjXTDFkANWpKWctHYMHZ',
+        address: 'jNPZMZxYx1Gj9rRYadiTfLG5ypQTJgmLAm'
     }, // a[1]--智能授权系统发币账号
     {
-      secret: 'snj7uooT7AyWECSEFdtfgktaqYeA2',
-      address: 'jBwyKkquJFXT3VMUxr71v7XxQHfqgAdUac'
+        secret: 'snj7uooT7AyWECSEFdtfgktaqYeA2',
+        address: 'jBwyKkquJFXT3VMUxr71v7XxQHfqgAdUac'
     }, // a[2]--版权局确权账号
     {
-      secret: 'snvrxFowqi2CbdsCAqRzqYnyUHkzU',
-      address: 'jUXNAu8YrzNQ6Vf6EsJcJTjhHKgGzb29y4'
-    }, // a[3]--买方平台账号 
+        secret: 'snvrxFowqi2CbdsCAqRzqYnyUHkzU',
+        address: 'jUXNAu8YrzNQ6Vf6EsJcJTjhHKgGzb29y4'
+    }, // a[3]--买方平台账号
     {
-      secret: 'ssyfiS2TBDiJP5Vq7Lht7kityxuXz',
-      address: 'jEY6Jr3qkDFnMcPZBig8jkdzTBt8ktMZA'
+        secret: 'ssyfiS2TBDiJP5Vq7Lht7kityxuXz',
+        address: 'jEY6Jr3qkDFnMcPZBig8jkdzTBt8ktMZA'
     }, // a[4]--卖方平台账号
     {
-      secret: 'shQxyCmFp937mHNrHmqvCxEqhmDzr',
-      address: 'jDg1GG5JpyFdrafjUcid99mKZeUXKHUptu'
+        secret: 'shQxyCmFp937mHNrHmqvCxEqhmDzr',
+        address: 'jDg1GG5JpyFdrafjUcid99mKZeUXKHUptu'
     }, // a[5]--智能交易系统账号
     {
-      secret: 'ss6x7sLB6dVLKTnA2WHgAZUrkduZC',
-      address: 'jw382C55JLbLbUJNu8iJtisaqb4TAoQDGC'
+        secret: 'ss6x7sLB6dVLKTnA2WHgAZUrkduZC',
+        address: 'jw382C55JLbLbUJNu8iJtisaqb4TAoQDGC'
     }, // a[6]--用户1 百度
     {
-      secret: 'ssAHHWR2WUVEfyN5VUzcFkVmtsnBj',
-      address: 'jG1Y4G3omHCAbAWRuuYZ5zwcftXgvfmaX3'
+        secret: 'ssAHHWR2WUVEfyN5VUzcFkVmtsnBj',
+        address: 'jG1Y4G3omHCAbAWRuuYZ5zwcftXgvfmaX3'
     }, // a[7]--用户2 京东
     {
-      secret: 'shC3KW3vZFtRCpquGFtiXwQvtsXJw',
-      address: 'jUcCWXZAW9Pyg3vzmGcJ97qHghYE7Udqan'
+        secret: 'shC3KW3vZFtRCpquGFtiXwQvtsXJw',
+        address: 'jUcCWXZAW9Pyg3vzmGcJ97qHghYE7Udqan'
     }, // a[8]--用户3
     {
-      secret: 'shegH3jnyxLFFtCiZBgEALTkwvBjy',
-      address: 'jGcNi9Bs4eddeeYZJfQMhXqgcyGYK5n8N9'
+        secret: 'shegH3jnyxLFFtCiZBgEALTkwvBjy',
+        address: 'jGcNi9Bs4eddeeYZJfQMhXqgcyGYK5n8N9'
     }, // a[9]--中间层
     {
-        secret: 'ssPFANF164Z84ua53bzbDZZJZKEXg',     
+        secret: 'ssPFANF164Z84ua53bzbDZZJZKEXg',
         address: 'jjhUAVFP9KSd743e4rT9dqDdxvBz6UDiEr'
     }, // a[10]--用户4
     {
-        secret: 'sh8dSbthkQ44PYdX4avG4YbmBPucf',     
+        secret: 'sh8dSbthkQ44PYdX4avG4YbmBPucf',
         address: 'j4azUzVJrwxyMfJLF4iWukNsNdCCijyzCX'
     }, // a[11]--用户5
     {
@@ -86,10 +86,11 @@ const userAccount = [
 const chains = [
     {
         server: [
-            'ws://39.102.91.224:5020',
-            'ws://39.102.92.249:5020',
-            'ws://39.102.90.153:5020',
-            'ws://39.102.92.229:5020'
+            'ws://139.129.194.65:5040'
+            // 'ws://39.102.91.224:5020',
+            // 'ws://39.102.92.249:5020',
+            // 'ws://39.102.90.153:5020',
+            // 'ws://39.102.92.229:5020'
         ],
         account: {
             root: {
@@ -113,7 +114,7 @@ const chains = [
     },
     {
         server: [
-            'ws://39.102.91.224:9030',//因为闯祸临时修改，改到剩下那三个服务器也能跑
+            'ws://39.102.91.224:9030',
             'ws://39.102.92.249:9030',
             'ws://39.102.90.153:9030',
             'ws://39.102.92.229:9030'
@@ -201,35 +202,23 @@ const authMemo = [
 const rightTokenName = 'rightToken';
 const approveTokenName = 'approveToken';
 
-const ipfsConf = {
-    host: '39.102.93.47',
-    port: '5001',
-    protocol: 'http'
-}
+export const ipfsAddUrl = new URL('http://182.92.178.101:9094/add');
+export const ipfsCatUrl = new URL('http://182.92.178.101:5001/api/v0/cat');
 
 const mysqlConf = {
-    host: '39.102.93.47',
-    user: 'root',
-    password: 'bykyl626',
+    host: '101.200.197.36',
+    user: 'blockchain',
+    password: 'Ittc626626!',
     port: '3306',
-    useConnectionPooling: true,
-    schema:{
-        tableName: 'session',
-        columnNames:{
-            session_id: 'session_id',
-            expires: 'expires',
-            data: 'data'
-        }
-    },
-    database: 'jingtum'
-}
+    database: 'blockchainmid',
+};
 /**
  * @Description: mysqlPoolConf: 听说可以保持连接
  * @url: https://github.com/mysqljs/mysql#pooling-connections
  * @implements  Used in the MidBackend.js
  * @author Bernard
  * @date 2021/5/24
-*/
+ */
 export const mysqlPoolConf = {
     connectionLimit : 10,
     host: '39.102.93.47',
@@ -305,4 +294,4 @@ const availableSellAddr = {
 
 const auditSystemAccount = userAccount[0];
 
-export {TESTPIC, chains, userAccount, userAccountIndex, userMemo, authMemo, rightTokenName, approveTokenName, ipfsConf, mysqlConf, mysqlTestConf, debugMode, buyOrderContractAddrs, sellOrderContractAddrs, availableSellAddr, auditSystemAccount};
+export {pic, chains, userAccount, userAccountIndex, userMemo, authMemo, rightTokenName, approveTokenName, mysqlConf, mysqlTestConf, debugMode, buyOrderContractAddrs, sellOrderContractAddrs, availableSellAddr, auditSystemAccount};

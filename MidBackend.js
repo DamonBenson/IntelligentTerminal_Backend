@@ -82,7 +82,7 @@ authRouter.get('/copyRightAmountEXchange', async function(req, res) {
 authRouter.get('/copyRightAmountGroupByIDtype', async function(req, res) {
     await NoUseMysql(req, res, authDisplayGroup.handleCopyRightAmountGroupByIDtype);
 });
-// localhost:9002/backend/copyRightAmountGroupByIDtype
+//TODO localhost:9002/backend/copyRightAmountGroupByIDtype
 
 authRouter.get('/copyRightAmountGroupByCopyrightType', async function(req, res) {
     await NoUseMysql(req, res, authDisplayGroup.handleCopyRightAmountGroupByCopyrightType);

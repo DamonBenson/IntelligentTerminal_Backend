@@ -15,13 +15,8 @@ import util from 'util';
 
 import mysql from 'mysql';
 import {c} from "../MidBackend.js";
-import {debugMode, CREATIONTYPE, TORTSITE} from '../utils/info.js';
-// OVERIDE the Info
-const WORKTYPE = {
-    1:"音乐",2:"摄影",3:"短视频",4:"戏剧",5:"曲艺",
-    6:"舞蹈",7:"杂技艺术",8:"美术",9:"建筑",10:"文字",
-    11:"电影",12:"图形",13:"模型",14:"其他"
-};
+import {debugMode, WORKTYPE, CREATIONTYPE, TORTSITE} from '../utils/info.js';
+
 const CONNECT = true;// When false, Send Random Response
 // export{
 //     handleTortCount,// 发现的侵权总数量
@@ -174,13 +169,13 @@ async function getTortCountGroupByWorkType() {
             "\t(\n" +
             "\t\tSELECT DISTINCT\n" +
             "\t\t\ttort_info.work_id, \n" +
-            "\t\t\twork_info.work_type\n" +
+            "\t\t\tToken.work_type\n" +
             "\t\tFROM\n" +
             "\t\t\ttort_info\n" +
             "\t\t\tINNER JOIN\n" +
-            "\t\t\twork_info\n" +
+            "\t\t\tToken\n" +
             "\t\t\tON \n" +
-            "\t\t\t\ttort_info.work_id = work_info.work_id\n" +
+            "\t\t\t\ttort_info.work_id = Token.work_id\n" +
             "\t) AS Type\n" +
             "GROUP BY\n" +
             "\tType.work_type\n" +
@@ -251,13 +246,13 @@ async function getTortCountGroupByCreationType() {
             "\t(\n" +
             "\t\tSELECT DISTINCT\n" +
             "\t\t\ttort_info.work_id, \n" +
-            "\t\t\twork_info.creation_type\n" +
+            "\t\t\tToken.creation_type\n" +
             "\t\tFROM\n" +
             "\t\t\ttort_info\n" +
             "\t\t\tINNER JOIN\n" +
-            "\t\t\twork_info\n" +
+            "\t\t\tToken\n" +
             "\t\t\tON \n" +
-            "\t\t\t\ttort_info.work_id = work_info.work_id\n" +
+            "\t\t\t\ttort_info.work_id = Token.work_id\n" +
             "\t) AS Type\n" +
             "GROUP BY\n" +
             "\tType.creation_type\n" +
@@ -419,13 +414,13 @@ async function getTortCountGroupByWorkTypeEXchange(NUM_LIMIT = 3) {
             "\t(\n" +
             "\t\tSELECT DISTINCT\n" +
             "\t\t\ttort_info.work_id, \n" +
-            "\t\t\twork_info.work_type\n" +
+            "\t\t\tToken.work_type\n" +
             "\t\tFROM\n" +
             "\t\t\ttort_info\n" +
             "\t\t\tINNER JOIN\n" +
-            "\t\t\twork_info\n" +
+            "\t\t\tToken\n" +
             "\t\t\tON \n" +
-            "\t\t\t\ttort_info.work_id = work_info.work_id\n" +
+            "\t\t\t\ttort_info.work_id = Token.work_id\n" +
             "\t\tWHERE\n" +
             "\t\t\ttort_info.upload_time <= %s AND\n" +
             "\t\t\ttort_info.upload_time > %s\n" +
@@ -549,13 +544,13 @@ async function getTortCountGroupByCreationTypeEXchange() {
             "\t(\n" +
             "\t\tSELECT DISTINCT\n" +
             "\t\t\ttort_info.work_id, \n" +
-            "\t\t\twork_info.creation_type\n" +
+            "\t\t\tToken.creation_type\n" +
             "\t\tFROM\n" +
             "\t\t\ttort_info\n" +
             "\t\t\tINNER JOIN\n" +
-            "\t\t\twork_info\n" +
+            "\t\t\tToken\n" +
             "\t\t\tON \n" +
-            "\t\t\t\ttort_info.work_id = work_info.work_id\n" +
+            "\t\t\t\ttort_info.work_id = Token.work_id\n" +
             "\t\tWHERE\n" +
             "\t\t\ttort_info.upload_time <= %s AND\n" +
             "\t\t\ttort_info.upload_time > %s\n" +
@@ -758,14 +753,14 @@ async function getTortGroupByTortSiteGroupByWorkType() {
             "FROM\n" +
             "\t(\n" +
             "\t\tSELECT\n" +
-            "\t\t\twork_info.work_type, \n" +
+            "\t\t\tToken.work_type, \n" +
             "\t\t\ttort_info.work_id\n" +
             "\t\tFROM\n" +
             "\t\t\ttort_info\n" +
             "\t\t\tINNER JOIN\n" +
-            "\t\t\twork_info\n" +
+            "\t\t\tToken\n" +
             "\t\t\tON \n" +
-            "\t\t\t\ttort_info.work_id = work_info.work_id\n" +
+            "\t\t\t\ttort_info.work_id = Token.work_id\n" +
             "\t\tWHERE\n" +
             "\t\t\ttort_info.site_name = \"%s\"OR\n" +
             "\t\t\ttort_info.site_name = \"%s\"OR\n" +
@@ -856,13 +851,13 @@ async function getTortTort_AND_ClaimCountGroupByWorkType() {
             "\t(\n" +
             "\t\tSELECT DISTINCT\n" +
             "\t\t\ttort_info.work_id, \n" +
-            "\t\t\twork_info.work_type\n" +
+            "\t\t\tToken.work_type\n" +
             "\t\tFROM\n" +
             "\t\t\ttort_info\n" +
             "\t\t\tINNER JOIN\n" +
-            "\t\t\twork_info\n" +
+            "\t\t\tToken\n" +
             "\t\t\tON \n" +
-            "\t\t\t\ttort_info.work_id = work_info.work_id\n" +
+            "\t\t\t\ttort_info.work_id = Token.work_id\n" +
             "\t) AS Type\n" +
             "GROUP BY\n" +
             "\tType.work_type\n" +
