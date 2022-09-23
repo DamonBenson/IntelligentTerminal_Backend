@@ -53,41 +53,53 @@ const listenRouter = express.Router({
 // authRouter.get('/authRightRate', async function(req, res) {
 //     await NoUseMysql(req, res, authDisplayGroup.handleAuthRightRate);
 // });
-// // localhost:9002/backend/authRightRate
+// // localhost:9181/backend/authRightRate
 // authRouter.get('/authByCompany', async function(req, res) {
 //     await NoUseMysql(req, res, authDisplayGroup.handleAuthByCompany);
 // });
-// // localhost:9002/backend/authByCompany
+// // localhost:9181/backend/authByCompany
 
+// 新增存证数量/月
 authRouter.get('/certificateAmountEXchange', async function(req, res) {
     await NoUseMysql(req, res, authDisplayGroup.handleCertificateAmountEXchange);
 });
-// localhost:9002/backend/certificateAmountEXchange
+// localhost:9181/backend/certificateAmountEXchange
 
+// 当前不同作品类型存证数量分布
 authRouter.get('/certificateAmountGroupByWorkType', async function(req, res) {
     await NoUseMysql(req, res, authDisplayGroup.handleCertificateAmountGroupByWorkType);
 });
-// localhost:9002/backend/certificateAmountGroupByWorkType
+// localhost:9181/backend/certificateAmountGroupByWorkType
 
+// 新增不同作品类型的存证数量/季
 authRouter.get('/certificateAmountGroupByWorkTypeEXchange', async function(req, res) {
     await NoUseMysql(req, res, authDisplayGroup.handleCertificateAmountGroupByWorkTypeEXchange);
 });
-// localhost:9002/backend/certificateAmountGroupByWorkTypeEXchange
+// localhost:9181/backend/certificateAmountGroupByWorkTypeEXchange
 
+// 新增版权通证数量/月
 authRouter.get('/copyRightAmountEXchange', async function(req, res) {
     await NoUseMysql(req, res, authDisplayGroup.handleCopyRightAmountEXchange);
 });
-// localhost:9002/backend/copyRightAmountEXchange
+// localhost:9181/backend/copyRightAmountEXchange
 
-authRouter.get('/copyRightAmountGroupByIDtype', async function(req, res) {
-    await NoUseMysql(req, res, authDisplayGroup.handleCopyRightAmountGroupByIDtype);
+// ABANDON// 个人账户与非个人账户接收者通证数量对比
+// ABANDONauthRouter.get('/copyRightAmountGroupByIDtype', async function(req, res) {
+// ABANDON    await NoUseMysql(req, res, authDisplayGroup.handleCopyRightAmountGroupByIDtype);
+// ABANDON});
+// ABANDONlocalhost:9181/backend/copyRightAmountGroupByIDtype
+
+// 不同著作权产生方式的存证分布
+authRouter.get('/certificateAmountGroupByCreateType', async function(req, res) {
+    await NoUseMysql(req, res, authDisplayGroup.handleCertificateAmountGroupByCreateType);
 });
-//TODO localhost:9002/backend/copyRightAmountGroupByIDtype
+//TODO localhost:9181/backend/certificateAmountGroupByCreateType
 
+// 不同类别通证数量分布
 authRouter.get('/copyRightAmountGroupByCopyrightType', async function(req, res) {
     await NoUseMysql(req, res, authDisplayGroup.handleCopyRightAmountGroupByCopyrightType);
 });
-// localhost:9002/backend/copyRightAmountGroupByCopyrightType
+// localhost:9181/backend/copyRightAmountGroupByCopyrightType
 
 
 /**************************/
@@ -96,63 +108,63 @@ authRouter.get('/copyRightAmountGroupByCopyrightType', async function(req, res) 
 listenRouter.get('/TortCount', async function(req, res) {
     await NoUseMysql(req, res, listenDisplayGroup.handleTortCount);
 });
-// localhost:9002/backend/listen/TortCount
+// localhost:9181/backend/listen/TortCount
 
 listenRouter.get('/TortClickCount', async function(req, res) {
     await NoUseMysql(req, res, listenDisplayGroup.handleTortClickCount);
 });
-// localhost:9002/backend/listen/TortClickCount
+// localhost:9181/backend/listen/TortClickCount
 
 listenRouter.get('/TortCountEXchange', async function(req, res) {
     await NoUseMysql(req, res, listenDisplayGroup.handleTortCountEXchange);
 });
-// localhost:9002/backend/listen/TortCountEXchange
+// localhost:9181/backend/listen/TortCountEXchange
 
 listenRouter.get('/TortCountGroupByWorkType', async function(req, res) {
     await NoUseMysql(req, res, listenDisplayGroup.handleTortCountGroupByWorkType);
 });
-// localhost:9002/backend/listen/TortCountGroupByWorkType
+// localhost:9181/backend/listen/TortCountGroupByWorkType
 
 listenRouter.get('/TortCountGroupByCreationType', async function(req, res) {
     await NoUseMysql(req, res, listenDisplayGroup.handleTortCountGroupByCreationType);
 });
-// localhost:9002/backend/listen/TortCountGroupByCreationType
+// localhost:9181/backend/listen/TortCountGroupByCreationType
 
 listenRouter.get('/TortCountGroupByWorkTypeEXchange', async function(req, res) {
     await NoUseMysql(req, res, listenDisplayGroup.handleTortCountGroupByWorkTypeEXchange);
 });
-// localhost:9002/backend/listen/TortCountGroupByWorkTypeEXchange
+// localhost:9181/backend/listen/TortCountGroupByWorkTypeEXchange
 
 listenRouter.get('/TortCountGroupByCreationTypeEXchange', async function(req, res) {
     await NoUseMysql(req, res, listenDisplayGroup.handleTortCountGroupByCreationTypeEXchange);
 });
-// localhost:9002/backend/listen/TortCountGroupByCreationTypeEXchange
+// localhost:9181/backend/listen/TortCountGroupByCreationTypeEXchange
 
 listenRouter.get('/TortCountGroupByTortSite', async function(req, res) {
     await NoUseMysql(req, res, listenDisplayGroup.handleTortCountGroupByTortSite);
 });
-// localhost:9002/backend/listen/TortCountGroupByTortSite
+// localhost:9181/backend/listen/TortCountGroupByTortSite
 
 listenRouter.get('/TortCountGroupByTortSiteEXchange', async function(req, res) {
     await NoUseMysql(req, res, listenDisplayGroup.handleTortCountGroupByTortSiteEXchange);
 });
-// localhost:9002/backend/listen/TortCountGroupByTortSiteEXchange
+// localhost:9181/backend/listen/TortCountGroupByTortSiteEXchange
 
 listenRouter.get('/TortCountGroupByTortSiteGroupByWorkType', async function(req, res) {
     await NoUseMysql(req, res, listenDisplayGroup.handleTortCountGroupByTortSiteGroupByWorkType);
 });
-// localhost:9002/backend/listen/TortCountGroupByTortSiteGroupByWorkType
+// localhost:9181/backend/listen/TortCountGroupByTortSiteGroupByWorkType
 
 listenRouter.get('/Tort_AND_ClaimCountGroupByWorkType', async function(req, res) {
     await NoUseMysql(req, res, listenDisplayGroup.handleTort_AND_ClaimCountGroupByWorkType);
 });
-// localhost:9002/backend/listen/Tort_AND_ClaimCountGroupByWorkType
+// localhost:9181/backend/listen/Tort_AND_ClaimCountGroupByWorkType
 
 
 /*----------http服务器配置----------*/
 
 const app = express();
-const port = 9002;
+const port = 9181;
 
 app.use(bodyParser.urlencoded({extended:false}));
 app.use(bodyParser.json());

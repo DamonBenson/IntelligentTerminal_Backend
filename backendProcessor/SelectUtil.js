@@ -67,8 +67,8 @@ function _sqlGroupBy(table, byKey , endTimeStamp , startTimeStamp , timeName, li
  * @example:.
  *
  */
-export async function countNum(table, key, endTimeStamp = null,startTimeStamp = null) {
-    let sqlRight = _sqlNum_InBackend(table, key, endTimeStamp,startTimeStamp);
+export async function countNum(table, PrimKey, endTimeStamp = null,startTimeStamp = null) {
+    let sqlRight = _sqlNum_InBackend(table, PrimKey, endTimeStamp,startTimeStamp);
     let sqlRes = await mysqlUtils.sql(c, sqlRight);
     return _getAnum_from_Res(sqlRes);
 }
@@ -105,8 +105,8 @@ function _sqlNum_InBackend(table, key, endTimeStamp, startTimeStamp, joinTable=n
         let joinKeyB = joinKey;
 
         if(joinKey == "baseInfo_workId"){
-            joinKeyA = table=="CopyrightToken"?"TokenId":"baseInfo_workId";
-            joinKeyB = joinTable=="CopyrightToken"?"TokenId":"baseInfo_workId";
+            joinKeyA = table=="CopyrightToken"?"workId":"baseInfo_workId";
+            joinKeyB = joinTable=="CopyrightToken"?"workId":"baseInfo_workId";
 
         }
         sqlRight = sqlRight+util.format(
@@ -120,11 +120,12 @@ function _sqlNum_InBackend(table, key, endTimeStamp, startTimeStamp, joinTable=n
             table,joinKeyA,joinTable,joinKeyB);
     }
     if(endTimeStamp != null){
+        let timestampName = table=="CopyrightToken"?"CopyrightToken.timestamp":"Token.baseInfo_timestamp";;
         sqlRight = sqlRight+util.format(
             '\t\tWHERE\n' +
-            '\t\t\tToken.baseInfo_timestamp <= %s AND\n' +
-            '\t\t\tToken.baseInfo_timestamp > %s\n',
-            endTimeStamp,startTimeStamp);
+            '\t\t\t%s <= %s AND\n' +
+            '\t\t\t%s > %s\n',
+            timestampName, endTimeStamp, timestampName, startTimeStamp);
         if(right==true){//确权
             sqlRight = sqlRight+'\tAND CopyrightToken.copyrightType = 1 \n';
         }

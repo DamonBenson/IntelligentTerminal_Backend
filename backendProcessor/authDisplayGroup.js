@@ -14,8 +14,8 @@ import util from 'util';
 
 import mysql from 'mysql';
 import {c} from "../MidBackend.js";
-import {debugMode, WORKTYPE, CREATIONTYPE} from '../utils/info.js';
-import {countGroupBy, countNumJoinRight, countNumJoinRightAll} from "./SelectUtil.js";
+import {debugMode, WORKTYPE, COPYRIGHTTYPE, COPYRIGHTCREATETYPE, CREATIONTYPE} from '../utils/info.js';
+import {countGroupBy, countNumJoinRight, countNum, countNumJoinRightAll} from "./SelectUtil.js";
 
 const CONNECT = true;// When false, Send Random Response
 // export{
@@ -48,14 +48,14 @@ export async function handleCertificateAmountEXchange(req, res) {
 }
 async function getCertificateAmountEXchange() {
     let [TimeStampArray,MonthArray] = DateUtil.getMonthTimeStampArray();
+    if(true)console.log("TimeStampArray:", TimeStampArray)
     // console.log([TimeStampArray, MonthArray]);
     let CertificateAmountEXchange = [];
     for (let index = 0; index < 12; index++) {
         let endTimeStamp = TimeStampArray[index];
         let startTimeStamp = TimeStampArray[(index + 1)];
-        let valueRes = await countNumJoinRight("CopyrightToken", "workId", "Token", "baseInfo_workId",
-            endTimeStamp,startTimeStamp);
-        if(CONNECT == false)valueRes = localUtils.randomNumber(30,50);
+        let valueRes = await countNum("Token", "baseInfo_workId",endTimeStamp,startTimeStamp);
+        if(CONNECT == false)valueRes = 0;
         let MonthInfo = {
             "CertificateAmount": valueRes["num"],
             "Month" : MonthArray[index + 1],
@@ -255,8 +255,7 @@ async function getCopyRightAmountEXchange() {
     for (let index = 0; index < 12; index++) {
         let endTimeStamp = TimeStampArray[index];
         let startTimeStamp = TimeStampArray[(index + 1)];
-        let valueRes = await countNumJoinRightAll("CopyrightToken", "workId", "Token", "baseInfo_workId",
-            endTimeStamp,startTimeStamp);
+        let valueRes = await countNum("CopyrightToken", "workId",endTimeStamp,startTimeStamp);
         let MonthInfo = {
             "CopyRightAmount": valueRes["num"],
             "Month" : MonthArray[index + 1],
@@ -268,72 +267,124 @@ async function getCopyRightAmountEXchange() {
     return CopyRightAmountEXchange;
 }
 
-// 1）	截止当前，在已生成的全部版权通证中，个人账户作为存证时的版权接收者（版权持有者证件类型为居民身份证、军官证与护照）
+//** 1）	截止当前，在已生成的全部版权通证中，个人账户作为存证时的版权接收者（版权持有者证件类型为居民身份证、军官证与护照）**//
 // 与非个人账户作为存证时的版权接收者（版权持有者证件类型为营业执照、企业法人营业执照、组织机构代码证书、事业单位法人证书、社团法人证书、其他有效证件）
 // 的通证数量分布。 id_type
 // 1..9   1.2.4为个人
-export async function handleCopyRightAmountGroupByIDtype(req, res) {
+// export async function handleCopyRightAmountGroupByIDtype(req, res) {
+//
+//     console.time('handleCopyRightAmountGroupByIDtype');
+//     let sqlRes = await getCopyRightAmountGroupByIDtype();
+//     console.timeEnd('handleCopyRightAmountGroupByIDtype');
+//     console.log('--------------------');
+//     return sqlRes;
+// }
+// //TODO 证件类型为何删除？
+// async function getCopyRightAmountGroupByIDtype() {
+//     let CopyRightAmountGroupByIDtype = {};
+//     if(CONNECT == false & false){
+//         CopyRightAmountGroupByIDtype = {
+//             "个人账户数目" : localUtils.randomNumber(300,500),
+//             "非个人账户数目": localUtils.randomNumber(600,1000),
+//         };
+//     }
+//     else{
+//         let sqlRight =util.format(
+//             'SELECT\n' +
+//             '\tCOUNT(CopyrightToken.TokenId) AS num\n' +
+//             'FROM\n' +
+//             '\tCopyrightToken\n' +
+//             'WHERE\n' +
+//             '\tCopyrightToken.id_type = 3 OR \n' +
+//             '\tCopyrightToken.id_type = 5 OR \n' +
+//             '\tCopyrightToken.id_type = 6 OR \n' +
+//             '\tCopyrightToken.id_type = 7 OR \n' +
+//             '\tCopyrightToken.id_type = 8 OR \n' +
+//             '\tCopyrightToken.id_type = 9');
+//         console.log(sqlRight);
+//         let sqlRes = await mysqlUtils.sql(c, sqlRight);
+//         console.log(sqlRes);
+//         let InPersonalNum = 0;
+//         sqlRes.forEach(function(item,index){
+//             InPersonalNum = item['num'];
+//         });
+//         sqlRight =util.format(
+//             'SELECT\n' +
+//             '\tCOUNT(CopyrightToken.TokenId) AS num\n' +
+//             'FROM\n' +
+//             '\tCopyrightToken\n' +
+//             'WHERE\n' +
+//             '\tCopyrightToken.id_type = 1 OR \n' +
+//             '\tCopyrightToken.id_type = 2 OR \n' +
+//             '\tCopyrightToken.id_type = 4');
+//         console.log(sqlRight);
+//         sqlRes = await mysqlUtils.sql(c, sqlRight);
+//         console.log(sqlRes);
+//         let PersonalNum = 0;
+//         sqlRes.forEach(function(item,index){
+//             PersonalNum = item['num'];
+//         });
+//
+//         CopyRightAmountGroupByIDtype = {
+//             "个人账户数目" : PersonalNum,
+//             "非个人账户数目": InPersonalNum,
+//         };
+//     }
+//     return CopyRightAmountGroupByIDtype;
+// }
 
-    console.time('handleCopyRightAmountGroupByIDtype');
-    let sqlRes = await getCopyRightAmountGroupByIDtype();
-    console.timeEnd('handleCopyRightAmountGroupByIDtype');
+
+
+
+//*不同著作权产生方式存证的分布*//
+export async function handleCertificateAmountGroupByCreateType(req, res) {
+
+    console.time('handleCertificateAmountGroupByCreateType');
+    let sqlRes = await getCertificateAmountGroupByCreateType();
+    console.timeEnd('handleCertificateAmountGroupByCreateType');
     console.log('--------------------');
     return sqlRes;
 }
-//TODO 证件类型为何删除？
-async function getCopyRightAmountGroupByIDtype() {
-    let CopyRightAmountGroupByIDtype = {};
-    if(CONNECT == false & false){
-        CopyRightAmountGroupByIDtype = {
-            "个人账户数目" : localUtils.randomNumber(300,500),
-            "非个人账户数目": localUtils.randomNumber(600,1000),
-        };
-    }
-    else{
+async function getCertificateAmountGroupByCreateType() {
+    let CertificateAmountGroupByCreateType = {};
+    if(CONNECT == true){
         let sqlRight =util.format(
             'SELECT\n' +
-            '\tCOUNT(CopyrightToken.TokenId) AS num\n' +
+            '\tCOUNT(Token.baseInfo_workId) AS num, \n' +
+            '\tToken.baseInfo_copyrightCreateType\n' +
             'FROM\n' +
-            '\tCopyrightToken\n' +
-            'WHERE\n' +
-            '\tCopyrightToken.id_type = 3 OR \n' +
-            '\tCopyrightToken.id_type = 5 OR \n' +
-            '\tCopyrightToken.id_type = 6 OR \n' +
-            '\tCopyrightToken.id_type = 7 OR \n' +
-            '\tCopyrightToken.id_type = 8 OR \n' +
-            '\tCopyrightToken.id_type = 9');
-        console.log(sqlRight);
+            '\tToken\n' +
+            'GROUP BY\n' +
+            '\tToken.baseInfo_copyrightCreateType\n' +
+            'ORDER BY\n' +
+            '\tToken.baseInfo_copyrightCreateType');
+        if(false)console.log("sqlRight:",sqlRight);// SQL语句
         let sqlRes = await mysqlUtils.sql(c, sqlRight);
-        console.log(sqlRes);
-        let InPersonalNum = 0;
+        if(false)console.log(sqlRes);// SQL返回
+        let AmountGroup = {};// 对应序号的字典 0-个人1-合作2-法人3-职务4-委托
         sqlRes.forEach(function(item,index){
-            InPersonalNum = item['num'];
+            AmountGroup[item['baseInfo_copyrightCreateType']] = item['num'];
         });
-        sqlRight =util.format(
-            'SELECT\n' +
-            '\tCOUNT(CopyrightToken.TokenId) AS num\n' +
-            'FROM\n' +
-            '\tCopyrightToken\n' +
-            'WHERE\n' +
-            '\tCopyrightToken.id_type = 1 OR \n' +
-            '\tCopyrightToken.id_type = 2 OR \n' +
-            '\tCopyrightToken.id_type = 4');
-        console.log(sqlRight);
-        sqlRes = await mysqlUtils.sql(c, sqlRight);
-        console.log(sqlRes);
-        let PersonalNum = 0;
-        sqlRes.forEach(function(item,index){
-            PersonalNum = item['num'];
-        });
-
-        CopyRightAmountGroupByIDtype = {
-            "个人账户数目" : PersonalNum,
-            "非个人账户数目": InPersonalNum,
-        };
+        console.log(AmountGroup);
+        CertificateAmountGroupByCreateType = {
+            "个人" : AmountGroup[0],
+            "合作" : AmountGroup[1],
+            "法人" : AmountGroup[2],
+            "职务" : AmountGroup[3],
+            "委托" : AmountGroup[4],
+        }
     }
-    return CopyRightAmountGroupByIDtype;
-}
+    let index = 0;
+    while(index<5){
+        if(!CertificateAmountGroupByCreateType[COPYRIGHTCREATETYPE[index]]){
+            CertificateAmountGroupByCreateType[COPYRIGHTCREATETYPE[index]] = 0;
+        }
+        index ++;
+    }
+    if(true)console.log(CertificateAmountGroupByCreateType);// 数据返回
 
+    return CertificateAmountGroupByCreateType;
+}
 // 二维图（两个自变量）
 // 2）	不同类型的账户作为版权通证接收者的通证数量随时间的变化。 IDType NeedTime
 // 4.	版权信息-copyrightType
@@ -365,42 +416,31 @@ async function getCopyRightAmountGroupByCopyrightType() {
         console.log(sqlRes);
         let AmountGroup = {};
         sqlRes.forEach(function(item,index){
-            AmountGroup[index] = item['num'];
+            AmountGroup[item['copyrightType']] = item['num'];
         });
         console.log(AmountGroup);
         CopyRightAmountGroupByIDtype = {
-            "复制权" : AmountGroup[0],
-            "发行权" : AmountGroup[1],
-            "出租权" : AmountGroup[2],
-            "展览权" : AmountGroup[3],
-            "表演权" : AmountGroup[4],
-            "放映权" : AmountGroup[5],
-            "广播"   : AmountGroup[6],
-            "信息网络传播权" : AmountGroup[7],
-            "摄制权" : AmountGroup[8],
-            "改编权" : AmountGroup[9],
-            "翻译权" : AmountGroup[10],
-            "汇编权" : AmountGroup[11],
-            "其他"   : AmountGroup[12]
+            "复制权" : AmountGroup[1],
+            "发行权" : AmountGroup[2],
+            "出租权" : AmountGroup[3],
+            "展览权" : AmountGroup[4],
+            "表演权" : AmountGroup[5],
+            "放映权" : AmountGroup[6],
+            "广播"   : AmountGroup[7],
+            "信息网络传播权" : AmountGroup[8],
+            "摄制权" : AmountGroup[9],
+            "改编权" : AmountGroup[10],
+            "翻译权" : AmountGroup[11],
+            "汇编权" : AmountGroup[12],
+            "其他"   : AmountGroup[13]
         }
     }
-    else {
-        CopyRightAmountGroupByIDtype = {
-            "复制权" : localUtils.randomNumber(200,500),
-            "发行权" : localUtils.randomNumber(200,500),
-            "出租权" : localUtils.randomNumber(200,500),
-            "展览权" : localUtils.randomNumber(200,500),
-            "表演权" : localUtils.randomNumber(200,500),
-            "放映权" : localUtils.randomNumber(200,500),
-            "广播"   : localUtils.randomNumber(200,500),
-            "信息网络传播权" : localUtils.randomNumber(200,500),
-            "摄制权" : localUtils.randomNumber(200,500),
-            "改编权" : localUtils.randomNumber(200,500),
-            "翻译权" : localUtils.randomNumber(200,500),
-            "汇编权" : localUtils.randomNumber(200,500),
-            "其他"   : localUtils.randomNumber(50,200),
-
+    let index = 0;
+    while(index<13){
+        if(!CopyRightAmountGroupByIDtype[COPYRIGHTTYPE[index]]){
+            CopyRightAmountGroupByIDtype[COPYRIGHTTYPE[index]] = 0;
         }
+        index ++;
     }
 
     return CopyRightAmountGroupByIDtype;

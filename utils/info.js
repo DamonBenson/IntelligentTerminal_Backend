@@ -252,7 +252,8 @@ const mysqlTestConf = {
 export const WORKTYPE = {
     1:"文字",2:"口述",3:"音乐",4:"戏剧",5:"曲艺",
     6:"舞蹈",7:"杂技艺术",8:"美术",9:"建筑",10:"摄影",
-    11:"电影和类似摄制电影方法创作的作品",12:"图形",13:"模型",14:"其他"
+    11:"电影",12:"类似摄制电影方法创作作品",13:"工程设计图，产品设计图",15:"地图，示意图",
+    17:"模型",19:"录音作品",20:"录像作品",181:"其他作品"
 };
 /**
  * @Description: WORKTYPE: 创作类型
@@ -272,7 +273,29 @@ export const TORTSITE = {
 export const TORTURL = {
     1:"https://www.letv.com/",2:"https://www.sina.com.cn/",3:"https://www.kugou.com/",4:"https://www.163.com/",5:"https://www.tencent.com/zh-cn",6:"https://music.163.com/song"
 };
+export const COPYRIGHTTYPE = [
+    "复制权",
+    "发行权",
+    "出租权",
+    "展览权",
+    "表演权",
+    "放映权",
+    "广播",
+    "信息网络传播权",
+    "摄制权",
+    "改编权",
+    "翻译权",
+    "汇编权",
+    "其他"
+];
 
+export const COPYRIGHTCREATETYPE = [
+    "个人",
+    "合作",
+    "法人",
+    "职务",
+    "委托"
+];
 
 const debugMode = true;
 

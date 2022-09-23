@@ -48,7 +48,7 @@ export async function handleTortCount(req, res) {
 async function getTortCount() {
     let tortCount = 0;
     if(CONNECT == true){
-        let Res = await  countNum("tort_info","sample_id");
+        let Res = await  countNum("Evidence","id");
         tortCount = Res['num'];
     }
     else{
