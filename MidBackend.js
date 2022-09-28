@@ -4,39 +4,68 @@ import * as authDisplayGroup from './backendProcessor/authDisplayGroup.js';
 import * as listenDisplayGroup from './backendProcessor/listenDisplayGroup.js';
 import mysql from 'mysql';
 
-import {mysqlConf} from './utils/info.js';
-export const c = mysql.createConnection(mysqlConf);
-await c.connect();
+import {mysqlConf1} from './utils/info.js';
+export const c1 = mysql.createConnection(mysqlConf1);
+await c1.connect();
 const reconnectInterval = 60*60000;//1h
 const pulseInterval = 60000;//1min
 
 setInterval(async function() {
-    c.end();
-    await c.connect();
+    c1.end();
+    await c1.connect();
 }, reconnectInterval);
-setInterval(() => c.ping(err => console.log('MySQL ping err:', err)), pulseInterval);
+setInterval(() => c1.ping(err => console.log('MySQL ping err:', err)), pulseInterval);
 
 
 /*----------信息查询请求路由配置----------*/
 async function UseMysql(req, res, handle) {
 
     try{
-        await c.connect();
+        await c1.connect();
     }
     catch(e){
         console.log("Connect Release?");
         res.send('数据库错误，请联系监测终端后台开发人员');
         res.end();
-        c.end();
+        c1.end();
         return;
     }
 
     let resJson = await handle(req, res);
     res.send({'data': resJson});
     res.end();
-    c.end();
+    c1.end();
 }
+import {mysqlConf2} from './utils/info.js';
+export const c2 = mysql.createConnection(mysqlConf2);
+await c2.connect();
 
+setInterval(async function() {
+    c2.end();
+    await c2.connect();
+}, reconnectInterval);
+setInterval(() => c2.ping(err => console.log('MySQL ping err:', err)), pulseInterval);
+
+
+/*----------信息查询请求路由配置----------*/
+async function UseMysql_c2(req, res, handle) {
+
+    try{
+        await c2.connect();
+    }
+    catch(e){
+        console.log("Connect Release?");
+        res.send('数据库错误，请联系监测终端后台开发人员');
+        res.end();
+        c2.end();
+        return;
+    }
+
+    let resJson = await handle(req, res);
+    res.send({'data': resJson});
+    res.end();
+    c2.end();
+}
 /*----------信息查询请求路由配置----------*/
 async function NoUseMysql(req, res, handle) {
     let resJson = await handle(req, res);
@@ -83,17 +112,11 @@ authRouter.get('/copyRightAmountEXchange', async function(req, res) {
 });
 // localhost:9181/backend/copyRightAmountEXchange
 
-// ABANDON// 个人账户与非个人账户接收者通证数量对比
-// ABANDONauthRouter.get('/copyRightAmountGroupByIDtype', async function(req, res) {
-// ABANDON    await NoUseMysql(req, res, authDisplayGroup.handleCopyRightAmountGroupByIDtype);
-// ABANDON});
-// ABANDONlocalhost:9181/backend/copyRightAmountGroupByIDtype
-
 // 不同著作权产生方式的存证分布
 authRouter.get('/certificateAmountGroupByCreateType', async function(req, res) {
     await NoUseMysql(req, res, authDisplayGroup.handleCertificateAmountGroupByCreateType);
 });
-//TODO localhost:9181/backend/certificateAmountGroupByCreateType
+// localhost:9181/backend/certificateAmountGroupByCreateType
 
 // 不同类别通证数量分布
 authRouter.get('/copyRightAmountGroupByCopyrightType', async function(req, res) {
@@ -110,56 +133,25 @@ listenRouter.get('/TortCount', async function(req, res) {
 });
 // localhost:9181/backend/listen/TortCount
 
-listenRouter.get('/TortClickCount', async function(req, res) {
-    await NoUseMysql(req, res, listenDisplayGroup.handleTortClickCount);
+listenRouter.get('/TortWorkCount', async function(req, res) {
+    await NoUseMysql(req, res, listenDisplayGroup.handleTortWorkCount);
 });
-// localhost:9181/backend/listen/TortClickCount
-
-listenRouter.get('/TortCountEXchange', async function(req, res) {
-    await NoUseMysql(req, res, listenDisplayGroup.handleTortCountEXchange);
-});
-// localhost:9181/backend/listen/TortCountEXchange
-
-listenRouter.get('/TortCountGroupByWorkType', async function(req, res) {
-    await NoUseMysql(req, res, listenDisplayGroup.handleTortCountGroupByWorkType);
-});
-// localhost:9181/backend/listen/TortCountGroupByWorkType
-
-listenRouter.get('/TortCountGroupByCreationType', async function(req, res) {
-    await NoUseMysql(req, res, listenDisplayGroup.handleTortCountGroupByCreationType);
-});
-// localhost:9181/backend/listen/TortCountGroupByCreationType
-
-listenRouter.get('/TortCountGroupByWorkTypeEXchange', async function(req, res) {
-    await NoUseMysql(req, res, listenDisplayGroup.handleTortCountGroupByWorkTypeEXchange);
-});
-// localhost:9181/backend/listen/TortCountGroupByWorkTypeEXchange
-
-listenRouter.get('/TortCountGroupByCreationTypeEXchange', async function(req, res) {
-    await NoUseMysql(req, res, listenDisplayGroup.handleTortCountGroupByCreationTypeEXchange);
-});
-// localhost:9181/backend/listen/TortCountGroupByCreationTypeEXchange
+// localhost:9181/backend/listen/TortWorkCount
 
 listenRouter.get('/TortCountGroupByTortSite', async function(req, res) {
     await NoUseMysql(req, res, listenDisplayGroup.handleTortCountGroupByTortSite);
 });
 // localhost:9181/backend/listen/TortCountGroupByTortSite
 
-listenRouter.get('/TortCountGroupByTortSiteEXchange', async function(req, res) {
-    await NoUseMysql(req, res, listenDisplayGroup.handleTortCountGroupByTortSiteEXchange);
+listenRouter.get('/TortCountGroupByWorkTypeEXchange', async function(req, res) {
+    await NoUseMysql(req, res, listenDisplayGroup.handleTortCountGroupByWorkTypeEXchange);
 });
-// localhost:9181/backend/listen/TortCountGroupByTortSiteEXchange
-
-listenRouter.get('/TortCountGroupByTortSiteGroupByWorkType', async function(req, res) {
-    await NoUseMysql(req, res, listenDisplayGroup.handleTortCountGroupByTortSiteGroupByWorkType);
-});
-// localhost:9181/backend/listen/TortCountGroupByTortSiteGroupByWorkType
+// TODO localhost:9181/backend/listen/TortCountGroupByWorkTypeEXchange
 
 listenRouter.get('/Tort_AND_ClaimCountGroupByWorkType', async function(req, res) {
     await NoUseMysql(req, res, listenDisplayGroup.handleTort_AND_ClaimCountGroupByWorkType);
 });
 // localhost:9181/backend/listen/Tort_AND_ClaimCountGroupByWorkType
-
 
 /*----------http服务器配置----------*/
 

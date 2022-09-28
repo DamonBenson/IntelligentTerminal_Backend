@@ -204,13 +204,21 @@ const approveTokenName = 'approveToken';
 
 export const ipfsAddUrl = new URL('http://182.92.178.101:9094/add');
 export const ipfsCatUrl = new URL('http://182.92.178.101:5001/api/v0/cat');
-
-const mysqlConf = {
+// 交易监听数据库
+const mysqlConf1 = {
     host: '101.200.197.36',
     user: 'blockchain',
     password: 'Ittc626626!',
     port: '3306',
     database: 'blockchainmid',
+};
+// 监测维权数据库
+export const mysqlConf2 = {
+    host: '101.200.197.36',
+    user: 'root',
+    password: 'bupt123',
+    port: '3307',
+    database: 'CopyRightData',
 };
 /**
  * @Description: mysqlPoolConf: 听说可以保持连接
@@ -252,23 +260,25 @@ const mysqlTestConf = {
 export const WORKTYPE = {
     1:"文字",2:"口述",3:"音乐",4:"戏剧",5:"曲艺",
     6:"舞蹈",7:"杂技艺术",8:"美术",9:"建筑",10:"摄影",
-    11:"电影",12:"类似摄制电影方法创作作品",13:"工程设计图，产品设计图",15:"地图，示意图",
+    11:"电影",12:"视频",//类似摄制电影方法创作作品
+    13:"设计图",//工程设计图，产品设计图
+    15:"示意图",//地图，示意图
     17:"模型",19:"录音作品",20:"录像作品",181:"其他作品"
 };
 /**
  * @Description: WORKTYPE: 创作类型
  * @date 2021/5/24
  */
-export const CREATIONTYPE = {
+export const WorkType = {
     1:"原创",2:"改编",3:"翻译",4:"汇编",5:"注释",
     6:"整理",7:"其他"
 };
 /**
- * @Description: 虚假的侵权网站
+ * @Description: 虚假的侵权网站/
  * @date 2021/5/24
  */
 export const TORTSITE = {
-    1:"乐视",2:"新浪",3:"酷狗",4:"网易",5:"腾讯",6:"网易云音乐"
+    1:"乐视",2:"新浪",3:"酷狗",4:"网易",5:"腾讯",6:"网易云"
 };
 export const TORTURL = {
     1:"https://www.letv.com/",2:"https://www.sina.com.cn/",3:"https://www.kugou.com/",4:"https://www.163.com/",5:"https://www.tencent.com/zh-cn",6:"https://music.163.com/song"
@@ -317,4 +327,4 @@ const availableSellAddr = {
 
 const auditSystemAccount = userAccount[0];
 
-export {pic, chains, userAccount, userAccountIndex, userMemo, authMemo, rightTokenName, approveTokenName, mysqlConf, mysqlTestConf, debugMode, buyOrderContractAddrs, sellOrderContractAddrs, availableSellAddr, auditSystemAccount};
+export {pic, chains, userAccount, userAccountIndex, userMemo, authMemo, rightTokenName, approveTokenName, mysqlConf1, mysqlTestConf, debugMode, buyOrderContractAddrs, sellOrderContractAddrs, availableSellAddr, auditSystemAccount};

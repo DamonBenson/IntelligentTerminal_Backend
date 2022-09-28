@@ -1,6 +1,5 @@
 import util from "util";
 import * as mysqlUtils from "../utils/mysqlUtils.js";
-import {c} from "../MidBackend.js";
 import {WORKTYPE} from "../utils/info.js";
 
 /**
@@ -12,7 +11,7 @@ import {WORKTYPE} from "../utils/info.js";
  * @author Bernard
  * @date 2021/5/31
  */
-export async function countGroupBy(table, byKey, endTimeStamp = null,startTimeStamp = null,
+export async function countGroupBy(c, table, byKey, endTimeStamp = null,startTimeStamp = null,
                                    timeName = "baseInfo_timestamp", limit = 3){
     let sqlRight = _sqlGroupBy(table, byKey , endTimeStamp , startTimeStamp ,timeName, limit);
     let sqlRes = await mysqlUtils.sql(c, sqlRight);
@@ -67,18 +66,18 @@ function _sqlGroupBy(table, byKey , endTimeStamp , startTimeStamp , timeName, li
  * @example:.
  *
  */
-export async function countNum(table, PrimKey, endTimeStamp = null,startTimeStamp = null) {
+export async function countNum(c, table, PrimKey, endTimeStamp = null,startTimeStamp = null) {
     let sqlRight = _sqlNum_InBackend(table, PrimKey, endTimeStamp,startTimeStamp);
     let sqlRes = await mysqlUtils.sql(c, sqlRight);
     return _getAnum_from_Res(sqlRes);
 }
-export async function countNumJoinRight(table, key, joinTable, joinKey, endTimeStamp = null,startTimeStamp = null) {
+export async function countNumJoinRight(c, table, key, joinTable, joinKey, endTimeStamp = null,startTimeStamp = null) {
     let sqlRight = _sqlNum_InBackend(table, key, endTimeStamp, startTimeStamp,joinTable, joinKey,true,true);
     let sqlRes = await mysqlUtils.sql(c, sqlRight);
     return _getAnum_from_Res(sqlRes);
 
 }
-export async function countNumJoinRightAll(table, key, joinTable, joinKey, endTimeStamp = null,startTimeStamp = null) {
+export async function countNumJoinRightAll(c, table, key, joinTable, joinKey, endTimeStamp = null,startTimeStamp = null) {
     let sqlRight = _sqlNum_InBackend(table, key, endTimeStamp, startTimeStamp,joinTable, joinKey,true,false);
     let sqlRes = await mysqlUtils.sql(c, sqlRight);
     return _getAnum_from_Res(sqlRes);

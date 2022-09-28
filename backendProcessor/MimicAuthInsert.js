@@ -113,7 +113,7 @@ function mimicChain1watchResponse(workAuth, addr){
         work_name : workAuth.workName,
         work_type : workAuth.workType,
         file_info_list : workAuth.fileInfoList,//JSON.stringify(
-        creation_type : workAuth.creationType,
+        creation_type : workAuth.WorkType,
         created_time : workAuth.createdTime,
         created_place : workAuth.created_place,
         publish_status : workAuth.publishStatus,
@@ -149,7 +149,7 @@ export function generateworkCopyRight(workAuth){
     //         workName: sha256(localUtils.randomNumber(100, 2000000000).toString()).toString().substring(0,8),
     //         workType: workType,// 文字,口述,音乐,戏剧,曲艺,舞蹈,杂技艺术,美术,建筑,摄影,电影和类似摄制电影方法创作的作品,图形,模型,其他
     //         fileInfoList:upload_fileInfoList,
-    //         creationType:localUtils.randomNumber(1,8),// 原创，改编，翻译，汇编，注释，整理，其他
+    //         WorkType:localUtils.randomNumber(1,8),// 原创，改编，翻译，汇编，注释，整理，其他
     //         createdTime:createdDay.format("YYYYMMDD"),// 创作/制作完成时间
     //         createdPlace:"BUPT",
     //         publishStatus:publishStatus,//发表状态，取值为Unpublished [未发表]，或者为Published (publishInfo)

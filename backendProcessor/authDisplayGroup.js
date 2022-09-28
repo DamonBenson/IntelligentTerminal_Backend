@@ -13,9 +13,9 @@ import * as localUtils from '../utils/localUtils.js';
 import util from 'util';
 
 import mysql from 'mysql';
-import {c} from "../MidBackend.js";
-import {debugMode, WORKTYPE, COPYRIGHTTYPE, COPYRIGHTCREATETYPE, CREATIONTYPE} from '../utils/info.js';
-import {countGroupBy, countNumJoinRight, countNum, countNumJoinRightAll} from "./SelectUtil.js";
+import {c1} from "../MidBackend.js";
+import {debugMode, WORKTYPE, COPYRIGHTTYPE, COPYRIGHTCREATETYPE, WorkType} from '../utils/info.js';
+import {countGroupBy,  countNum} from "./SelectUtil.js";
 
 const CONNECT = true;// When false, Send Random Response
 // export{
@@ -54,7 +54,7 @@ async function getCertificateAmountEXchange() {
     for (let index = 0; index < 12; index++) {
         let endTimeStamp = TimeStampArray[index];
         let startTimeStamp = TimeStampArray[(index + 1)];
-        let valueRes = await countNum("Token", "baseInfo_workId",endTimeStamp,startTimeStamp);
+        let valueRes = await countNum(c1,"Token", "baseInfo_workId",endTimeStamp,startTimeStamp);
         if(CONNECT == false)valueRes = 0;
         let MonthInfo = {
             "CertificateAmount": valueRes["num"],
@@ -81,7 +81,7 @@ async function getCertificateAmountGroupByWorkType() {
     let WorkTypeInfo = {};
 
     if(CONNECT == true){
-        let Res = await countGroupBy("Token", "baseInfo_workType");
+        let Res = await countGroupBy(c1, "Token", "baseInfo_workType");
         console.log("Res:",Res);
         let keys = Object.keys(Res);
         console.log("keys:",keys);
@@ -139,7 +139,7 @@ async function getCertificateAmountGroupByWorkTypeEXchange() {
         while(keys.length<3 && index<3){//寻找出现最多的属性，如果当前季节找不到3个有效结果，则往前面的季节找。只调用1年的数据。
             endTimeStamp = TimeStampArray[index];
             startTimeStamp = TimeStampArray[(index + 1)];
-            let Res = await countGroupBy("Token", "baseInfo_workType", endTimeStamp ,startTimeStamp);
+            let Res = await countGroupBy(c1, "Token", "baseInfo_workType", endTimeStamp ,startTimeStamp);
             //寻找最大的季节
             let TempKeys = Object.keys(Res);
             if(TempKeys.length>keys){keys = Object.keys(Res)};
@@ -160,9 +160,8 @@ async function getCertificateAmountGroupByWorkTypeEXchange() {
         for (let index = 0; index < 4; index = index + SeasonGap) {
             endTimeStamp = TimeStampArray[index];
             startTimeStamp = TimeStampArray[(index + 1)];
-            // let Res = await countGroupBy("Token", "baseInfo_workType",endTimeStamp ,startTimeStamp);
             let sqlRight = gen_SqlRight(endTimeStamp , startTimeStamp, keys);
-            let sqlRes = await mysqlUtils.sql(c, sqlRight);
+            let sqlRes = await mysqlUtils.sql(c1, sqlRight);
             let Res = {};
             sqlRes.forEach(value =>
                 Res[[value["baseInfo_workType"]]] = value['num']
@@ -255,7 +254,7 @@ async function getCopyRightAmountEXchange() {
     for (let index = 0; index < 12; index++) {
         let endTimeStamp = TimeStampArray[index];
         let startTimeStamp = TimeStampArray[(index + 1)];
-        let valueRes = await countNum("CopyrightToken", "workId",endTimeStamp,startTimeStamp);
+        let valueRes = await countNum(c1,"CopyrightToken", "workId",endTimeStamp,startTimeStamp);
         let MonthInfo = {
             "CopyRightAmount": valueRes["num"],
             "Month" : MonthArray[index + 1],
@@ -302,7 +301,7 @@ async function getCopyRightAmountEXchange() {
 //             '\tCopyrightToken.id_type = 8 OR \n' +
 //             '\tCopyrightToken.id_type = 9');
 //         console.log(sqlRight);
-//         let sqlRes = await mysqlUtils.sql(c, sqlRight);
+//         let sqlRes = await mysqlUtils.sql(c1, sqlRight);
 //         console.log(sqlRes);
 //         let InPersonalNum = 0;
 //         sqlRes.forEach(function(item,index){
@@ -318,7 +317,7 @@ async function getCopyRightAmountEXchange() {
 //             '\tCopyrightToken.id_type = 2 OR \n' +
 //             '\tCopyrightToken.id_type = 4');
 //         console.log(sqlRight);
-//         sqlRes = await mysqlUtils.sql(c, sqlRight);
+//         sqlRes = await mysqlUtils.sql(c1, sqlRight);
 //         console.log(sqlRes);
 //         let PersonalNum = 0;
 //         sqlRes.forEach(function(item,index){
@@ -359,7 +358,7 @@ async function getCertificateAmountGroupByCreateType() {
             'ORDER BY\n' +
             '\tToken.baseInfo_copyrightCreateType');
         if(false)console.log("sqlRight:",sqlRight);// SQL语句
-        let sqlRes = await mysqlUtils.sql(c, sqlRight);
+        let sqlRes = await mysqlUtils.sql(c1, sqlRight);
         if(false)console.log(sqlRes);// SQL返回
         let AmountGroup = {};// 对应序号的字典 0-个人1-合作2-法人3-职务4-委托
         sqlRes.forEach(function(item,index){
@@ -412,7 +411,7 @@ async function getCopyRightAmountGroupByCopyrightType() {
             'ORDER BY\n' +
             '\tCopyrightToken.copyrightType');
         console.log(sqlRight);
-        let sqlRes = await mysqlUtils.sql(c, sqlRight);
+        let sqlRes = await mysqlUtils.sql(c1, sqlRight);
         console.log(sqlRes);
         let AmountGroup = {};
         sqlRes.forEach(function(item,index){
