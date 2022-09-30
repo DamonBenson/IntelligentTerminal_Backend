@@ -15,8 +15,7 @@ import util from 'util';
 import mysql from 'mysql';
 
 import {c2} from "../MidBackend.js";
-import {debugMode, WORKTYPE, WorkType, TORTSITE} from '../utils/info.js';
-
+import {debugMode, WORKTYPE, TORTSITE, PICTURE_WORKTYPE, MOVIE_WORKTYPE, MUSIC_WORKTYPE} from '../utils/info.js';
 const CONNECT = true;// When false, Send Random Response
 
 /*
@@ -92,15 +91,15 @@ async function getTortWorkCount() {
  * @date: 2021/5/25 17:31
  * @description:不同创作类型的侵权数量随时间的变化。
  */
-export async function handleTortCountGroupByWorkTypeEXchange(req, res) {
+export async function handleTortCountGroupByWorkTypeEXchange(req, res, SelectOption) {
 
     console.time('handleTortCountGroupByWorkTypeEXchange');
-    let sqlRes = await getTortCountGroupByWorkTypeEXchange();
+    let sqlRes = await getTortCountGroupByWorkTypeEXchange(SelectOption);
     console.timeEnd('handleTortCountGroupByWorkTypeEXchange');
     console.log('--------------------');
     return sqlRes;
 }
-async function getTortCountGroupByWorkTypeEXchange() {
+async function getTortCountGroupByWorkTypeEXchange(SelectOption) {
     let TortCountGroupByWorkTypeEXchange = [];
     let [TimeStampArray,MonthArray] = DateUtil.getMonthTimeStampArray();
     let MonthGap = 1;
@@ -108,44 +107,43 @@ async function getTortCountGroupByWorkTypeEXchange() {
     let endTimeStamp = TimeStampArray[index];
     let startTimeStamp = TimeStampArray[(index + 1)];
     if(CONNECT == true){
-        // TODO 确定选中的类型
-        let keySet = new Set();
-        while(keySet.size<3 && index<12){
-            endTimeStamp = TimeStampArray[index];
-            startTimeStamp = TimeStampArray[(index + 1)];
-            let sqlRight = gen_SqlRight(endTimeStamp,startTimeStamp);
-            let sqlRes = await mysqlUtils.sql(c2, sqlRight);
-            sqlRes.forEach(function(item){
-                keySet.add(item['workType']);
-            });
-            index = index + MonthGap;
+        // 选择3个站点
+        let tortSites = [];
+        let sqlRight = gen_SqlRight(TimeStampArray[0], TimeStampArray[11], SelectOption);
+        let sqlRes = await mysqlUtils.sql(c2, sqlRight);
+        sqlRes.forEach(function(item){
+            tortSites.push(item["tortsite"]);
+        });
+
+        let indexCount = 1;//下方循环的计数器
+        while(tortSites.length <3){
+            tortSites.push(TORTSITE[indexCount++]);
         }
-        let keys = Array.from(keySet);
+        // 根据前三个站点做出统计
         for (let index = 0; index < 12; index = index + MonthGap) {
             endTimeStamp = TimeStampArray[index];
             startTimeStamp = TimeStampArray[(index + 1)];
             let TortCountGroupByWorkType = [];
-            let sqlRight = gen_SqlRight(endTimeStamp,startTimeStamp);
+            let sqlRight = gen_SqlRight(endTimeStamp, startTimeStamp, SelectOption, tortSites);
             let sqlRes = await mysqlUtils.sql(c2, sqlRight);
-            let Res = {};
+            let res ={};
             sqlRes.forEach(function(item){
-                Res[item['workType']]=item['num']
+                res[item['tortsite']]=item['num'];
             });
-            for (let i = 0, n = keys.length, key; i < n; ++i) {
-                key = keys[i];
-                if(Res[key]==null)Res[key]=0;
+            tortSites.forEach(function(tortsite){
                 let MonthInfo = {
-                    "WorkType":WORKTYPE[key],
-                    "TortCount":Res[key],
+                    "TortSite":tortsite,
+                    "TortCount":res[tortsite]!=undefined?res[tortsite]:0,
                     "Month" : MonthArray[index + MonthGap],
                 };
                 TortCountGroupByWorkType.push(MonthInfo);
-            };
+            });
+
             TortCountGroupByWorkTypeEXchange.push(TortCountGroupByWorkType);
         }
-        if(keys.length < 3){
-            _PROTECT_getTortCountGroupByWorkTypeEXchange(TortCountGroupByWorkTypeEXchange, MonthGap, MonthArray)
-        }
+        // if(keys.length < 3){
+        //     _PROTECT_getTortCountGroupByWorkTypeEXchange(TortCountGroupByWorkTypeEXchange, MonthGap, MonthArray)
+        // }
     }
     else{
         _PROTECT_getTortCountGroupByWorkTypeEXchange(TortCountGroupByWorkTypeEXchange, MonthGap, MonthArray)
@@ -180,7 +178,7 @@ async function getTortCountGroupByWorkTypeEXchange() {
         for (let index = 0; index < 12; index = index + MonthGap) {
             for(let i = keyLenth;i < needNum + keyLenth;i++){
                 let MonthInfo = {
-                    "WorkType":selectionWorkType[i],
+                    "TortSite":selectionWorkType[i],
                     "TortCount":0,
                     "Month" : MonthArray[index + MonthGap],
                 };
@@ -188,27 +186,45 @@ async function getTortCountGroupByWorkTypeEXchange() {
             }
         }
     }
-    function gen_SqlRight(endTimeStamp,startTimeStamp){
-        return  util.format("SELECT\n" +
-            "\tType.workType, \n" +
+    // @param SelectOption:选择音乐、视频或者图片组。
+    function gen_SqlRight(endTimeStamp, startTimeStamp, SelectOption, tortSite = null, table = "Evidence", byKey= "tortsite"){
+        let sqlRight = util.format("SELECT\n" +
+            "\tType.tortsite, \n" +
             "\tCOUNT(Type.workid) AS num\n" +
             "FROM\n" +
             "\t(\n" +
             "\t\tSELECT DISTINCT\n" +
             "\t\t\tEvidence.workid, \n" +
-            "\t\t\tEvidence.workType\n" +
+            "\t\t\tEvidence.tortsite \n" +
             "\t\tFROM\n" +
             "\t\t\tEvidence\n" +
             "\t\tWHERE\n" +
-            "\t\t\tEvidence.timestamp <= %s AND\n" +
-            "\t\t\tEvidence.timestamp > %s\n" +
+            "\t\t\t(Evidence.timestamp <= %s AND\n" +
+            "\t\t\tEvidence.timestamp > %s )AND(\n",endTimeStamp,startTimeStamp);
+        SelectOption.forEach(value =>
+            sqlRight = sqlRight + util.format(
+                '\t\t\t%s.workType = %s OR\n',
+                table,value)
+        );
+        sqlRight = sqlRight + util.format('\t\t\tFALSE)\n');
+        if(tortSite != null){
+            sqlRight = sqlRight + util.format(
+                '\t\t\tAND(\n');
+            tortSite.forEach(value =>
+                sqlRight = sqlRight + util.format(
+                    '\t\t\t%s.tortsite = "%s" OR\n',
+                    table,value)
+            );
+            sqlRight = sqlRight + util.format('\t\t\tFALSE)\n');
+        }
+        sqlRight = sqlRight + util.format(
             "\t) AS Type\n" +
             "GROUP BY\n" +
-            "\tType.workType\n" +
+            "\tType.tortsite\n" +
             "ORDER BY\n" +
-            "\tnum DESC\n" +
-            "LIMIT 3",endTimeStamp,startTimeStamp);
-
+            "\ttortsite DESC\n" +
+            "LIMIT 3");
+        return sqlRight;
     }
 }
 
@@ -219,37 +235,69 @@ async function getTortCountGroupByWorkTypeEXchange() {
  * @param res: 返回
  * @return: null
  * @author: Bernard
- * @date: 2021/5/25 17:31
+ * @date: 2022年9月28日
  * @description:截止当前，在前N个侵权站点，发现的侵权数量分布。
  */
-export async function handleTortCountGroupByTortSite(req, res) {
+
+export async function handleTortCountGroupByTortSite(req, res, SelectOption) {
 
     console.time('handleTortCountGroupByTortSite');
-    let sqlRes = await getTortCountGroupByTortSite();
+    let sqlRes = await getTortCountGroupByTortSite(SelectOption);
     console.timeEnd('handleTortCountGroupByTortSite');
     console.log('--------------------');
     return sqlRes;
 }
-async function getTortCountGroupByTortSite() {
+// @param SelectOption:选择音乐、视频或者图片组。
+async function getTortCountGroupByTortSite(SelectOption) {
     let TortCountGroupByTortSite = [];
     let TortSiteInfo = {};
     if(CONNECT == true){
-        let Res = await countGroupBy(c2, "Evidence","tortsite");
+
+        // @param SelectOption:选择音乐、视频或者图片组。
+        function gen_SqlRight(SelectOption, limit = 3, table = "Evidence", byKey= "tortsite") {
+            let sqlRight = util.format(
+                'SELECT\n' +
+                '\t*\n' +
+                'FROM\n' +
+                '\t(\n' +
+                '\t\tSELECT\n' +
+                '\t\t\t%s.%s, \n' +
+                '\t\t\tCOUNT(%s.%s) AS num\n' +
+                '\t\tFROM\n' +
+                '\t\t\t%s\n' +
+                '\t\tWHERE\n',
+                table, byKey,
+                table, byKey,
+                table);
+            SelectOption.forEach(value =>
+                sqlRight = sqlRight+util.format(
+                '\t\t\t%s.workType = %s OR\n',
+                table,value)
+            );
+            sqlRight = sqlRight+util.format('\t\t\tFALSE\n');
+
+
+            sqlRight = sqlRight + util.format(
+                '\t\tGROUP BY\n' +
+                '\t\t\t%s.%s\n' +
+                '\t) AS Type\n' +
+                'ORDER BY\n' +
+                '\tnum DESC\n' +
+                'LIMIT %d',
+                table, byKey,
+                limit);
+            return sqlRight;
+        }
+        let sqlRight = gen_SqlRight(SelectOption);
+        let sqlRes = await mysqlUtils.sql(c2, sqlRight);
+        let Res = {};
+        sqlRes.forEach(value =>
+            Res[[value["tortsite"]]] = value['num']
+        );
         let keys = Object.keys(Res);
         if(keys[0]==""){
             keys = [];
         }
-
-        // await Batch(TortCountGroupByTortSite);
-        // async function Batch(TortCountGroupByTortSite){
-        //     let Res = await  countNum(c2,"Evidence","id");
-        //     let tortCount = Res['num'];
-        //     TortSiteInfo = {
-        //         "TortSite":TORTSITE[6],
-        //         "TortCount":tortCount
-        //     };
-        //     TortCountGroupByTortSite.push(TortSiteInfo);
-        // }
 
 
         for (let i = 0, n = keys.length, key; i < n; ++i) {

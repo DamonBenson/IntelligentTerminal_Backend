@@ -265,11 +265,19 @@ export const WORKTYPE = {
     15:"示意图",//地图，示意图
     17:"模型",19:"录音作品",20:"录像作品",181:"其他作品"
 };
+
 /**
- * @Description: WORKTYPE: 创作类型
+ * @Description: WORKTYPE: 作品类型中属于图片、视频、音乐的集合
+ * @date 2022/9/28
+ */
+export const PICTURE_WORKTYPE = [8,9,10,13,15];
+export const MOVIE_WORKTYPE = [4,10,11,12,20];
+export const MUSIC_WORKTYPE = [2,3,5,19];
+/**
+ * @Description: CREATIONTYPE: 创作类型
  * @date 2021/5/24
  */
-export const WorkType = {
+export const CREATIONTYPE = {
     1:"原创",2:"改编",3:"翻译",4:"汇编",5:"注释",
     6:"整理",7:"其他"
 };

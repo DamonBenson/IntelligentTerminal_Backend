@@ -14,7 +14,7 @@ import util from 'util';
 
 import mysql from 'mysql';
 import {c1} from "../MidBackend.js";
-import {debugMode, WORKTYPE, COPYRIGHTTYPE, COPYRIGHTCREATETYPE, WorkType} from '../utils/info.js';
+import {debugMode, WORKTYPE, COPYRIGHTTYPE, COPYRIGHTCREATETYPE} from '../utils/info.js';
 import {countGroupBy,  countNum} from "./SelectUtil.js";
 
 const CONNECT = true;// When false, Send Random Response

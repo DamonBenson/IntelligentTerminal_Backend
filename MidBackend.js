@@ -4,7 +4,7 @@ import * as authDisplayGroup from './backendProcessor/authDisplayGroup.js';
 import * as listenDisplayGroup from './backendProcessor/listenDisplayGroup.js';
 import mysql from 'mysql';
 
-import {mysqlConf1} from './utils/info.js';
+import {MOVIE_WORKTYPE, MUSIC_WORKTYPE, mysqlConf1, PICTURE_WORKTYPE} from './utils/info.js';
 export const c1 = mysql.createConnection(mysqlConf1);
 await c1.connect();
 const reconnectInterval = 60*60000;//1h
@@ -67,8 +67,14 @@ async function UseMysql_c2(req, res, handle) {
     c2.end();
 }
 /*----------信息查询请求路由配置----------*/
-async function NoUseMysql(req, res, handle) {
-    let resJson = await handle(req, res);
+async function NoUseMysql(req, res, handle, params=null) {
+    let resJson = null;
+    if(params == null){
+        resJson = await handle(req, res);
+    }
+    else{
+        resJson = await handle(req, res, params);
+    }
     res.send({'data': resJson});
     res.end();
 }
@@ -138,15 +144,30 @@ listenRouter.get('/TortWorkCount', async function(req, res) {
 });
 // localhost:9181/backend/listen/TortWorkCount
 
-listenRouter.get('/TortCountGroupByTortSite', async function(req, res) {
-    await NoUseMysql(req, res, listenDisplayGroup.handleTortCountGroupByTortSite);
+listenRouter.get('/PictureTortCountGroupByTortSite', async function(req, res) {
+    await NoUseMysql(req, res, listenDisplayGroup.handleTortCountGroupByTortSite, PICTURE_WORKTYPE);
 });
-// localhost:9181/backend/listen/TortCountGroupByTortSite
+// localhost:9181/backend/listen/PictureTortCountGroupByTortSite
 
-listenRouter.get('/TortCountGroupByWorkTypeEXchange', async function(req, res) {
-    await NoUseMysql(req, res, listenDisplayGroup.handleTortCountGroupByWorkTypeEXchange);
+listenRouter.get('/MoiveTortCountGroupByTortSite', async function(req, res) {
+    await NoUseMysql(req, res, listenDisplayGroup.handleTortCountGroupByTortSite, MOVIE_WORKTYPE);
 });
-// TODO localhost:9181/backend/listen/TortCountGroupByWorkTypeEXchange
+// localhost:9181/backend/listen/MoiveTortCountGroupByTortSite
+
+listenRouter.get('/MusicTortCountGroupByTortSite', async function(req, res) {
+    await NoUseMysql(req, res, listenDisplayGroup.handleTortCountGroupByTortSite, MUSIC_WORKTYPE);
+});
+// localhost:9181/backend/listen/MusicTortCountGroupByTortSite
+
+listenRouter.get('/TortCountPictureGroupByTortSiteEXchange', async function(req, res) {
+    await NoUseMysql(req, res, listenDisplayGroup.handleTortCountGroupByWorkTypeEXchange, PICTURE_WORKTYPE);
+});
+// localhost:9181/backend/listen/TortCountPictureGroupByTortSiteEXchange
+
+listenRouter.get('/TortCountMusicGroupByTortSiteEXchange', async function(req, res) {
+    await NoUseMysql(req, res, listenDisplayGroup.handleTortCountGroupByWorkTypeEXchange, MUSIC_WORKTYPE);
+});
+// localhost:9181/backend/listen/TortCountMusicGroupByTortSiteEXchange
 
 listenRouter.get('/Tort_AND_ClaimCountGroupByWorkType', async function(req, res) {
     await NoUseMysql(req, res, listenDisplayGroup.handleTort_AND_ClaimCountGroupByWorkType);
