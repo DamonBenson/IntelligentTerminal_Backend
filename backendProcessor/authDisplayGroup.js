@@ -38,8 +38,13 @@ const CONNECT = true;// When false, Send Random Response
 // 1.	存证信息-作品信息
 // 一维图（一个自变量）
 // 1）	存证总数量随时间的变化。
-export async function handleCertificateAmountEXchange(req, res) {
+// async function checkDBConnected(){
+//     if(c1.state == "authenticated")return true;
+//     return false;
+// }
 
+export async function handleCertificateAmountEXchange(req, res) {
+    // if(checkDBConnected()==false)return "err"
     console.time('handleCertificateAmountEXchange');
     let sqlRes = await getCertificateAmountEXchange();
     console.timeEnd('handleCertificateAmountEXchange');

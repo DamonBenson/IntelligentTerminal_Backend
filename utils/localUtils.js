@@ -1,7 +1,5 @@
 import fs from 'fs';
 import crypto from 'crypto';
-import jlib from 'jingtum-lib';
-const u = jlib.utils;
 
 /*----------暂停----------*/
 

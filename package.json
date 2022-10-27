@@ -18,5 +18,9 @@
     "mysql": "^2.18.1",
     "node-transform-mysql": "0.0.4",
     "npm": "^7.24.2"
+  },
+  "devDependencies": {
+    "form-data": "^4.0.0",
+    "request": "^2.88.2"
   }
 }
