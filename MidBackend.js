@@ -2,36 +2,127 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import * as authDisplayGroup from './backendProcessor/authDisplayGroup.js';
 import * as listenDisplayGroup from './backendProcessor/listenDisplayGroup.js';
-import request from 'request'
 import * as httpUtils from './utils/httpUtils.js';
 import mysql from 'mysql';
 
 import {MOVIE_WORKTYPE, MUSIC_WORKTYPE, mysqlConf1, PICTURE_WORKTYPE} from './utils/info.js';
 import {mysqlConf2} from './utils/info.js';
+import fs from "fs";
 export const c1 = mysql.createConnection(mysqlConf1);
-await c1.connect();
-const reconnectInterval = 60*60000;//1h
+const reconnectInterval = 5000;//5s60*60000;//1h
 const pulseInterval = 60000;//1min
-const debugMode = 1;
+const updateExtraDataeInterval = 5000;//5s
+
+const debugMode = false;
+const SAVEPATH = './ExtraData'
 
 //  更新版权局数据
-function updateExtraData(){
-    const url='http://117.107.213.242:8151/by/queryStatisticsData';
-    const param={date: null};
-    let resInfo = httpUtils.postFormData(url, param);
-    console.log('北版数据:', resInfo);
+async function updateExtraData(savePath = SAVEPATH) {
+    const url = 'http://117.107.213.242:8151/by/queryStatisticsData';
+    const param = {date: ""};
+    let resInfo = await httpUtils.postFormData(url, param);
+    resInfo = JSON.parse(resInfo);
+    if(resInfo['code'] === 200){
+        if(debugMode)console.log('北版数据:',JSON.stringify(resInfo.data));
+        Object.keys(resInfo.data).forEach(Month=>{
+            let NewCopyrightType={};
+            constructNewCopyrightType(NewCopyrightType);
+            Object.keys(resInfo.data[Month]["cert"]["copyrightType"]).forEach(value => {
+                switch(value) {
+                    case "13":formNewCopyrightType(NewCopyrightType, Number(resInfo.data[Month]["cert"]["copyrightType"]["13"]));break;
+                    case "16":formNewCopyrightType(NewCopyrightType, Number(resInfo.data[Month]["cert"]["copyrightType"]["16"]));break;
+                    case "17":formNewCopyrightType(NewCopyrightType, Number(resInfo.data[Month]["cert"]["copyrightType"]["17"]));break;
+                }
+            })
+            resInfo.data[Month]["cert"]["copyrightType"] = NewCopyrightType;
+        })
+        fs.writeFileSync(savePath,JSON.stringify(resInfo.data));
+        function constructNewCopyrightType(NewCopyrightType){
+            NewCopyrightType["4"] = 0;
+            NewCopyrightType["5"] = 0;
+            NewCopyrightType["6"] = 0;
+            NewCopyrightType["7"] = 0;
+            NewCopyrightType["8"] = 0;
+            NewCopyrightType["9"] = 0;
+            NewCopyrightType["10"] = 0;
+            NewCopyrightType["11"] = 0;
+            NewCopyrightType["12"] = 0;
+            NewCopyrightType["13"] = 0;
+            NewCopyrightType["14"] = 0;
+            NewCopyrightType["15"] = 0;
+            NewCopyrightType["16"] = 0;
+        }
+        function formNewCopyrightType(NewCopyrightType, number){
+            NewCopyrightType["4"] += number;
+            NewCopyrightType["5"] += number;
+            NewCopyrightType["6"] += number;
+            NewCopyrightType["7"] += number;
+            NewCopyrightType["8"] += number;
+            NewCopyrightType["9"] += number;
+            NewCopyrightType["10"] += number;
+            NewCopyrightType["11"] += number;
+            NewCopyrightType["12"] += number;
+            NewCopyrightType["13"] += number;
+            NewCopyrightType["14"] += number;
+            NewCopyrightType["15"] += number;
+            NewCopyrightType["16"] += number;
+        }
+    }
+    else{
+        console.log('北版数据获取失败:',JSON.stringify(resInfo.data));
+    }
+
 }
+/**
+ * @description 读取版权局数据
+ * @returns {JSON} 北版数据JSON
+ */
+function readExtraData(savePath = SAVEPATH) {
+    let JsonData = fs.readFileSync(savePath);
+    return JSON.parse(JsonData.toString());
+}
+let  extraData = readExtraData();
+console.log('北版数据读取:',JSON.stringify(extraData));
+
+// handleDisconnect(c1);
+//
+//
+// function handleDisconnect(connection) {
+//     //监听错误事件
+//     connection.on('error', function(err) {
+//         if (!err.fatal) {
+//             return;
+//         }
+//
+//         if (err.code !== 'PROTOCOL_CONNECTION_LOST') {
+//             throw err;
+//         }
+//
+//         console.log('Re-connecting lost connection: ' + err.stack);
+//
+//         connection = mysql.createConnection(connection.config);
+//         handleDisconnect(connection);
+//         connection.connect();
+//     });
+// }
 
 
 
-
-await c1.connect(err =>console.log('存证确权数据库连接失败:', err));
-setInterval(async function() {
-    c1.end();
-    await c1.connect();
-}, reconnectInterval);
-setInterval(() => c1.ping(err => console.log('MySQL ping err:', err)), pulseInterval);
-
+await c1.connect(err =>console.log('存证确权数据库连接情况:', err));
+// setInterval(async function() {
+//     await c1.destroy();
+//
+//     console.log("存证确权数据库释放中");
+//     await sleep(5000);
+//     // TODO https://github.com/mysqljs/mysql#connection-options
+//     console.log("存证确权数据库释放中？");
+//
+//     await c1.connect(err =>console.log('存证确权数据库重连情况:', err));
+// }, reconnectInterval);
+setInterval(() => c1.ping(err => console.log('存证确权数据库连接情况:', err)), pulseInterval);
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 async function UseMysql_c1(req, res, handle, params=null) {
     if(c1.state != "authenticated") {
@@ -43,10 +134,10 @@ async function UseMysql_c1(req, res, handle, params=null) {
     else{
         let resJson = null;
         if(params == null){
-            resJson = await handle(req, res);
+            resJson = await handle(extraData);
         }
         else{
-            resJson = await handle(req, res, params);
+            resJson = await handle(extraData, params);
         }
         res.send({'data': resJson});
         res.end();
@@ -55,13 +146,13 @@ async function UseMysql_c1(req, res, handle, params=null) {
 }
 export const c2 = mysql.createConnection(mysqlConf2);
 
-await c2.connect(err =>console.log('监测维权数据库连接失败:', err));
+await c2.connect(err =>console.log('监测维权数据库连接情况:', err));
 
-setInterval(async function() {
-    c2.end();
-    await c2.connect();
-}, reconnectInterval);
-setInterval(() => c2.ping(err => console.log('MySQL ping err:', err)), pulseInterval);
+// setInterval(async function() {
+//     c2.end();
+//     await c2.connect(err =>console.log('监测维权数据库重连情况:', err));
+// }, reconnectInterval);
+setInterval(() => c2.ping(err => console.log('监测维权数据库连接情况:', err)), pulseInterval);
 
 
 async function UseMysql_c2(req, res, handle, params=null) {
@@ -85,17 +176,6 @@ async function UseMysql_c2(req, res, handle, params=null) {
 
 }
 /*----------信息查询请求路由配置----------*/
-// async function WithMysql(req, res, handle, params=null) {
-//     let resJson = null;
-//     if(params == null){
-//         resJson = await handle(req, res);
-//     }
-//     else{
-//         resJson = await handle(req, res, params);
-//     }
-//     res.send({'data': resJson});
-//     res.end();
-// }
 const authRouter = express.Router({
     caseSensitive: false,// 不区分大小写
 });
@@ -114,7 +194,7 @@ authRouter.get('/certificateAmountEXchange', async function(req, res) {
 });
 // localhost:9181/backend/certificateAmountEXchange
 
-// 当前不同作品类型存证数量分布
+// 不同作品类型的存证分布分布
 authRouter.get('/certificateAmountGroupByWorkType', async function(req, res) {
     await UseMysql_c1(req, res, authDisplayGroup.handleCertificateAmountGroupByWorkType);
 });

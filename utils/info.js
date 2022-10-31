@@ -291,29 +291,30 @@ export const TORTSITE = {
 export const TORTURL = {
     1:"https://www.letv.com/",2:"https://www.sina.com.cn/",3:"https://www.kugou.com/",4:"https://www.163.com/",5:"https://www.tencent.com/zh-cn",6:"https://music.163.com/song"
 };
-export const COPYRIGHTTYPE = [
-    "复制权",
-    "发行权",
-    "出租权",
-    "展览权",
-    "表演权",
-    "放映权",
-    "广播",
-    "信息网络传播权",
-    "摄制权",
-    "改编权",
-    "翻译权",
-    "汇编权",
-    "其他"
-];
+export const COPYRIGHTTYPE = {
+    4:"复制权",
+    5:"发行权",
+    6:"出租权",
+    7:"展览权",
+    8:"表演权",
+    9:"放映权",
+    10:"广播",
+    11:"信息网络传播权",
+    12:"摄制权",
+    13:"改编权",
+    14:"翻译权",
+    15:"汇编权",
+    16:"其他"
+};
 
-export const COPYRIGHTCREATETYPE = [
-    "个人",
-    "合作",
-    "法人",
-    "职务",
-    "委托"
-];
+export const COPYRIGHTCREATETYPE = {
+    0:"个人",
+    1:"合作",
+    2:"法人",
+    3:"职务",
+    4:"委托"
+}
+
 
 const debugMode = true;
 

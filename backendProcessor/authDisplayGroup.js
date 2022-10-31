@@ -18,6 +18,7 @@ import {debugMode, WORKTYPE, COPYRIGHTTYPE, COPYRIGHTCREATETYPE} from '../utils/
 import {countGroupBy,  countNum} from "./SelectUtil.js";
 
 const CONNECT = true;// When false, Send Random Response
+
 // export{
 //     handleCertificateAmountEXchange,// 1）	存证总数量随时间的变化。
 //     handleCertificateAmountGroupByWorkType,// 2）	截止当前不同作品类型。workType
@@ -43,15 +44,15 @@ const CONNECT = true;// When false, Send Random Response
 //     return false;
 // }
 
-export async function handleCertificateAmountEXchange(req, res) {
+export async function handleCertificateAmountEXchange(extraData) {
     // if(checkDBConnected()==false)return "err"
     console.time('handleCertificateAmountEXchange');
-    let sqlRes = await getCertificateAmountEXchange();
+    let sqlRes = await getCertificateAmountEXchange(extraData);
     console.timeEnd('handleCertificateAmountEXchange');
     console.log('--------------------');
     return sqlRes;
 }
-async function getCertificateAmountEXchange() {
+async function getCertificateAmountEXchange(extraData) {
     let [TimeStampArray,MonthArray] = DateUtil.getMonthTimeStampArray();
     if(true)console.log("TimeStampArray:", TimeStampArray)
     // console.log([TimeStampArray, MonthArray]);
@@ -62,7 +63,7 @@ async function getCertificateAmountEXchange() {
         let valueRes = await countNum(c1,"Token", "baseInfo_workId",endTimeStamp,startTimeStamp);
         if(CONNECT == false)valueRes = 0;
         let MonthInfo = {
-            "CertificateAmount": valueRes["num"],
+            "CertificateAmount": (valueRes["num"] + Number(extraData[12- index]["works"]["total"])),
             "Month" : MonthArray[index + 1],
         };
         CertificateAmountEXchange.push(MonthInfo);
@@ -73,31 +74,59 @@ async function getCertificateAmountEXchange() {
 }
 
 // 2）	截止当前不同作品类型
-export async function handleCertificateAmountGroupByWorkType(req, res) {
+export async function handleCertificateAmountGroupByWorkType(extraData) {
 
     console.time('handleCertificateAmountGroupByWorkType');
-    let sqlRes = await getCertificateAmountGroupByWorkType();
+    let sqlRes = await getCertificateAmountGroupByWorkType(extraData);
     console.timeEnd('handleCertificateAmountGroupByWorkType');
     console.log('--------------------');
     return sqlRes;
 }
-async function getCertificateAmountGroupByWorkType() {
+async function getCertificateAmountGroupByWorkType(extraData) {
     let CertificateAmountGroupByWorkType = [];
     let WorkTypeInfo = {};
 
     if(CONNECT == true){
+        // TODO 北邮的数据库是按全部，而北版是按一年算，虽然结题时是不到一年的数据
         let Res = await countGroupBy(c1, "Token", "baseInfo_workType");
         console.log("Res:",Res);
-        let keys = Object.keys(Res);
-        console.log("keys:",keys);
-        for (let i = 0, n = keys.length, key; i < n; ++i) {
-            key = keys[i];
+
+        let RawRes = {};
+        let keys = Object.keys(WORKTYPE);
+        keys.forEach(value =>
+            RawRes[value] = Number(Res[value])?Number(Res[value]):0
+        );
+        let extraDataKeys = Object.keys(extraData)
+        extraDataKeys.forEach(Month =>
+            keys.forEach(value =>
+                RawRes[value] = RawRes[value] + (Number(extraData[Month]["works"]["workType"][value])?Number(extraData[Month]["works"]["workType"][value]):0)
+            )
+        );
+        console.log("RawRes:",RawRes);
+        
+        // 字典取三个最大值
+        let resTemp = Object.keys(RawRes).sort(function(a,b){ return RawRes[b] - RawRes[a];             });
+        let resMax = resTemp.slice(0,3);
+        resTemp.splice(0,3);
+        console.log("resMax:",resMax);
+        console.log("resTemp:",resTemp);
+
+        resMax.forEach(key=>{
             WorkTypeInfo = {
                 "workType":WORKTYPE[key],
-                "CertificateAmount":Res[key]
+                "CertificateAmount":RawRes[key]
             };
             CertificateAmountGroupByWorkType.push(WorkTypeInfo);
-        }
+        })
+        let spareNum = 0;
+        resTemp.forEach(key=>{
+            spareNum += RawRes[key];
+        })
+        WorkTypeInfo = {
+            "workType":"剩余的",
+            "CertificateAmount":spareNum
+        };
+        CertificateAmountGroupByWorkType.push(WorkTypeInfo);
         console.log("CertificateAmountGroupByWorkType:",CertificateAmountGroupByWorkType);
     }
     else{
@@ -114,13 +143,47 @@ async function getCertificateAmountGroupByWorkType() {
     }
 
     return CertificateAmountGroupByWorkType;
+
+    async function countGroupBy(c, table, byKey){
+        let sqlRight = _sqlGroupBy(table, byKey);
+        let sqlRes = await mysqlUtils.sql(c, sqlRight);
+        let Res = {};
+        sqlRes.forEach(value =>
+            Res[[value[byKey]]] = value['num']
+        );
+        return Res;
+    }
+
+    function _sqlGroupBy(table, byKey) {
+        let sqlRight = util.format(
+            'SELECT\n' +
+            '\t*\n' +
+            'FROM\n' +
+            '\t(\n' +
+            '\t\tSELECT\n' +
+            '\t\t\t%s.%s, \n' +
+            '\t\t\tCOUNT(%s.%s) AS num\n' +
+            '\t\tFROM\n' +
+            '\t\t\t%s\n',
+            table, byKey,
+            table, byKey,
+            table);
+        sqlRight = sqlRight + util.format(
+            '\t\tGROUP BY\n' +
+            '\t\t\t%s.%s\n' +
+            '\t) AS Type\n' +
+            'ORDER BY\n' +
+            '\tnum DESC\n'
+            ,table, byKey);
+        return sqlRight;
+    }
 }
 
 // 3）	不同作品类型的存证数量随时间的变化。workType
-export async function handleCertificateAmountGroupByWorkTypeEXchange(req, res) {
+export async function handleCertificateAmountGroupByWorkTypeEXchange(extraData) {
 
     console.time('handleCertificateAmountGroupByWorkTypeEXchange');
-    let sqlRes = await getCertificateAmountGroupByWorkTypeEXchange();
+    let sqlRes = await getCertificateAmountGroupByWorkTypeEXchange(extraData);
 
 
     // let resJson = JSON.stringify(sqlRes);
@@ -128,11 +191,10 @@ export async function handleCertificateAmountGroupByWorkTypeEXchange(req, res) {
     console.log('--------------------');
     return sqlRes;
 }
-async function getCertificateAmountGroupByWorkTypeEXchange() {
+async function getCertificateAmountGroupByWorkTypeEXchange(extraData) {
     let [TimeStampArray,MonthArray] = DateUtil.getSeasonTimeStampArray();
     let CertificateAmountGroupByWorkTypeEXchange = [];
     let CertificateAmountGroupByWorkType = [];
-    let SeasonGap = 1;
     let WorkTypeInfo = {};
     // console.log([TimeStampArray, MonthArray]);
     if(CONNECT == true){
@@ -140,29 +202,43 @@ async function getCertificateAmountGroupByWorkTypeEXchange() {
         let endTimeStamp = TimeStampArray[index];
         let startTimeStamp = TimeStampArray[(index + 1)];
         console.log(TimeStampArray);
-        let keys = [];
-        while(keys.length<3 && index<3){//寻找出现最多的属性，如果当前季节找不到3个有效结果，则往前面的季节找。只调用1年的数据。
-            endTimeStamp = TimeStampArray[index];
-            startTimeStamp = TimeStampArray[(index + 1)];
-            let Res = await countGroupBy(c1, "Token", "baseInfo_workType", endTimeStamp ,startTimeStamp);
-            //寻找最大的季节
-            let TempKeys = Object.keys(Res);
-            if(TempKeys.length>keys){keys = Object.keys(Res)};
-            //只调用1年的数据
-            index = index + SeasonGap;
-        }
+        //* 寻找最大的WORKTYPE *//
+        // TODO 北邮的数据库是按全部，而北版是按一年算，虽然结题时是不到一年的数据
+        let totalres = await countGroupBy(c1, "Token", "baseInfo_workType");
+
+        let RawRes = {};
+        let keys = Object.keys(WORKTYPE);
+        keys.forEach(value =>{
+            totalres[value] = Number(totalres[value])?Number(totalres[value]):0;// undefined的0保护
+            RawRes[value] = totalres[value];
+        });
+        let extraDataKeys = Object.keys(extraData)
+        extraDataKeys.forEach(Month =>
+            keys.forEach(value =>
+                RawRes[value] = RawRes[value] + Number(extraData[Month]["works"]["workType"][value])
+            )
+        );
+        console.log("totalres:",totalres);
+        console.log("RawRes:",RawRes);
         // keys不足补齐
-        if(keys.length<3){
-            let temp = 1;
-            while(keys.length<3){
-                if(keys.findIndex(function (nums) {return nums == temp})){
-                    keys.push(temp.toString());
-                }
-                temp++;
-            }
-            console.log("keys:",keys);
-        }
-        for (let index = 0; index < 4; index = index + SeasonGap) {
+        let resTemp = RawRes;// 赋值为字典，但是使用时为有序数组
+        // if(Object.keys(resTemp).length<19){
+        //     const WORKTYPEKEYS = Object.keys(WORKTYPE);
+        //     WORKTYPEKEYS.forEach(key=>{
+        //         if(!resTemp[key]){
+        //             resTemp[key] = 0;
+        //         }
+        //     })
+        //     console.log("keys不足补齐resTemp:",resTemp);
+        // }
+        // 字典取三个最大值
+        resTemp = Object.keys(resTemp).sort(function(a,b){ return resTemp[b] - resTemp[a];});
+        let resMax = resTemp.slice(0,3);
+        console.log("resMax:",resMax);
+        console.log("resTemp:",resTemp);
+        resTemp.splice(0,3);
+        keys = resMax;//命名冲突,但不想改
+        for (let index = 0; index < 4; index = index + 1) {
             endTimeStamp = TimeStampArray[index];
             startTimeStamp = TimeStampArray[(index + 1)];
             let sqlRight = gen_SqlRight(endTimeStamp , startTimeStamp, keys);
@@ -178,11 +254,29 @@ async function getCertificateAmountGroupByWorkTypeEXchange() {
                 if(Res[key]==null)Res[key]=0;
                 let MonthInfo = {
                     "workType":WORKTYPE[key],
-                    "CertificateAmount":Res[key],
+                    "CertificateAmount":Res[key]
+                    + Number(extraData[index+1]["works"]["workType"][key])
+                    + Number(extraData[index+2]["works"]["workType"][key])
+                    + Number(extraData[index+3]["works"]["workType"][key]),
                     "Month" : MonthArray[index],
                 };
                 CertificateAmountGroupByWorkType.push(MonthInfo);
             }
+            // 剩余类型并入“剩余的"类，不用其他是为了辨别
+            let spareSum = 0;
+            resTemp.forEach(key=>{
+                spareSum += totalres[key] +
+                + Number(extraData[index+1]["works"]["workType"][key])
+                + Number(extraData[index+2]["works"]["workType"][key])
+                + Number(extraData[index+3]["works"]["workType"][key]);
+
+            })
+            let MonthInfo = {
+                "workType":"剩余的",
+                "CertificateAmount":spareSum,
+                "Month" : MonthArray[index],
+            };
+            CertificateAmountGroupByWorkType.push(MonthInfo);
             CertificateAmountGroupByWorkTypeEXchange.push(CertificateAmountGroupByWorkType);
 
         }
@@ -194,19 +288,25 @@ async function getCertificateAmountGroupByWorkTypeEXchange() {
 
             WorkTypeInfo = {
                 "workType":"音乐",
-                "CertificateAmount":localUtils.randomNumber(80,100),
+                "CertificateAmount":0,
                 "Month" : MonthArray[index + SeasonGap],
             };
             CertificateAmountGroupByWorkType.push(WorkTypeInfo);
             WorkTypeInfo = {
                 "workType":"电影",
-                "CertificateAmount":localUtils.randomNumber(60,80),
+                "CertificateAmount":0,
                 "Month" : MonthArray[index + SeasonGap],
             };
             CertificateAmountGroupByWorkType.push(WorkTypeInfo);
             WorkTypeInfo = {
                 "workType":"美术",
-                "CertificateAmount":localUtils.randomNumber(40,60),
+                "CertificateAmount":0,
+                "Month" : MonthArray[index + SeasonGap],
+            };
+            CertificateAmountGroupByWorkType.push(WorkTypeInfo);
+            WorkTypeInfo = {
+                "workType":"剩余的",
+                "CertificateAmount":0,
                 "Month" : MonthArray[index + SeasonGap],
             };
             CertificateAmountGroupByWorkType.push(WorkTypeInfo);
@@ -242,18 +342,60 @@ async function getCertificateAmountGroupByWorkTypeEXchange() {
             ,endTimeStamp , startTimeStamp, workTypes[0], workTypes[1], workTypes[2])
 
     }
+    async function countGroupBy(c, table, byKey, endTimeStamp = null,startTimeStamp = null,
+                                       timeName = "baseInfo_timestamp"){
+        let sqlRight = _sqlGroupBy(table, byKey , endTimeStamp , startTimeStamp ,timeName);
+        let sqlRes = await mysqlUtils.sql(c, sqlRight);
+        let Res = {};
+        sqlRes.forEach(value =>
+            Res[[value[byKey]]] = value['num']
+        );
+        return Res;
+    }
+
+    function _sqlGroupBy(table, byKey , endTimeStamp , startTimeStamp , timeName) {
+        let sqlRight = util.format(
+            'SELECT\n' +
+            '\t*\n' +
+            'FROM\n' +
+            '\t(\n' +
+            '\t\tSELECT\n' +
+            '\t\t\t%s.%s, \n' +
+            '\t\t\tCOUNT(%s.%s) AS num\n' +
+            '\t\tFROM\n' +
+            '\t\t\t%s\n',
+            table, byKey,
+            table, byKey,
+            table);
+
+        if(endTimeStamp != null){
+            sqlRight = sqlRight+util.format(
+                '\t\tWHERE\n' +
+                '\t\t\t%s.%s <= %s AND\n' +
+                '\t\t\t%s.%s > %s\n',
+                table,timeName,endTimeStamp,
+                table,timeName,startTimeStamp);
+        }
+
+        sqlRight = sqlRight + util.format(
+            '\t\tGROUP BY\n' +
+            '\t\t\t%s.%s\n' +
+            '\t) AS Type\n'
+            ,table, byKey,);
+        return sqlRight;
+    }
 }
 
 // 1）	版权通证总数量随时间的变化。 Amount
-export async function handleCopyRightAmountEXchange(req, res) {
+export async function handleCopyRightAmountEXchange(extraData) {
 
     console.time('handleCopyRightAmountEXchange');
-    let sqlRes = await getCopyRightAmountEXchange();
+    let sqlRes = await getCopyRightAmountEXchange(extraData);
     console.timeEnd('handleCopyRightAmountEXchange');
     console.log('--------------------');
     return sqlRes;
 }
-async function getCopyRightAmountEXchange() {
+async function getCopyRightAmountEXchange(extraData) {
     let [TimeStampArray,MonthArray] = DateUtil.getMonthTimeStampArray();
     let CopyRightAmountEXchange = [];
     for (let index = 0; index < 12; index++) {
@@ -261,7 +403,7 @@ async function getCopyRightAmountEXchange() {
         let startTimeStamp = TimeStampArray[(index + 1)];
         let valueRes = await countNum(c1,"CopyrightToken", "workId",endTimeStamp,startTimeStamp);
         let MonthInfo = {
-            "CopyRightAmount": valueRes["num"],
+            "CopyRightAmount": valueRes["num"] + (Number(extraData[12 - index]["works"]["total"])?Number(extraData[12 - index]["works"]["total"]):0),
             "Month" : MonthArray[index + 1],
         };
         CopyRightAmountEXchange.push(MonthInfo);
@@ -271,85 +413,17 @@ async function getCopyRightAmountEXchange() {
     return CopyRightAmountEXchange;
 }
 
-//** 1）	截止当前，在已生成的全部版权通证中，个人账户作为存证时的版权接收者（版权持有者证件类型为居民身份证、军官证与护照）**//
-// 与非个人账户作为存证时的版权接收者（版权持有者证件类型为营业执照、企业法人营业执照、组织机构代码证书、事业单位法人证书、社团法人证书、其他有效证件）
-// 的通证数量分布。 id_type
-// 1..9   1.2.4为个人
-// export async function handleCopyRightAmountGroupByIDtype(req, res) {
-//
-//     console.time('handleCopyRightAmountGroupByIDtype');
-//     let sqlRes = await getCopyRightAmountGroupByIDtype();
-//     console.timeEnd('handleCopyRightAmountGroupByIDtype');
-//     console.log('--------------------');
-//     return sqlRes;
-// }
-// //TODO 证件类型为何删除？
-// async function getCopyRightAmountGroupByIDtype() {
-//     let CopyRightAmountGroupByIDtype = {};
-//     if(CONNECT == false & false){
-//         CopyRightAmountGroupByIDtype = {
-//             "个人账户数目" : localUtils.randomNumber(300,500),
-//             "非个人账户数目": localUtils.randomNumber(600,1000),
-//         };
-//     }
-//     else{
-//         let sqlRight =util.format(
-//             'SELECT\n' +
-//             '\tCOUNT(CopyrightToken.TokenId) AS num\n' +
-//             'FROM\n' +
-//             '\tCopyrightToken\n' +
-//             'WHERE\n' +
-//             '\tCopyrightToken.id_type = 3 OR \n' +
-//             '\tCopyrightToken.id_type = 5 OR \n' +
-//             '\tCopyrightToken.id_type = 6 OR \n' +
-//             '\tCopyrightToken.id_type = 7 OR \n' +
-//             '\tCopyrightToken.id_type = 8 OR \n' +
-//             '\tCopyrightToken.id_type = 9');
-//         console.log(sqlRight);
-//         let sqlRes = await mysqlUtils.sql(c1, sqlRight);
-//         console.log(sqlRes);
-//         let InPersonalNum = 0;
-//         sqlRes.forEach(function(item,index){
-//             InPersonalNum = item['num'];
-//         });
-//         sqlRight =util.format(
-//             'SELECT\n' +
-//             '\tCOUNT(CopyrightToken.TokenId) AS num\n' +
-//             'FROM\n' +
-//             '\tCopyrightToken\n' +
-//             'WHERE\n' +
-//             '\tCopyrightToken.id_type = 1 OR \n' +
-//             '\tCopyrightToken.id_type = 2 OR \n' +
-//             '\tCopyrightToken.id_type = 4');
-//         console.log(sqlRight);
-//         sqlRes = await mysqlUtils.sql(c1, sqlRight);
-//         console.log(sqlRes);
-//         let PersonalNum = 0;
-//         sqlRes.forEach(function(item,index){
-//             PersonalNum = item['num'];
-//         });
-//
-//         CopyRightAmountGroupByIDtype = {
-//             "个人账户数目" : PersonalNum,
-//             "非个人账户数目": InPersonalNum,
-//         };
-//     }
-//     return CopyRightAmountGroupByIDtype;
-// }
-
-
-
 
 //*不同著作权产生方式存证的分布*//
-export async function handleCertificateAmountGroupByCreateType(req, res) {
+export async function handleCertificateAmountGroupByCreateType(extraData) {
 
     console.time('handleCertificateAmountGroupByCreateType');
-    let sqlRes = await getCertificateAmountGroupByCreateType();
+    let sqlRes = await getCertificateAmountGroupByCreateType(extraData);
     console.timeEnd('handleCertificateAmountGroupByCreateType');
     console.log('--------------------');
     return sqlRes;
 }
-async function getCertificateAmountGroupByCreateType() {
+async function getCertificateAmountGroupByCreateType(extraData) {
     let CertificateAmountGroupByCreateType = {};
     if(CONNECT == true){
         let sqlRight =util.format(
@@ -362,20 +436,30 @@ async function getCertificateAmountGroupByCreateType() {
             '\tToken.baseInfo_copyrightCreateType\n' +
             'ORDER BY\n' +
             '\tToken.baseInfo_copyrightCreateType');
-        if(false)console.log("sqlRight:",sqlRight);// SQL语句
         let sqlRes = await mysqlUtils.sql(c1, sqlRight);
-        if(false)console.log(sqlRes);// SQL返回
         let AmountGroup = {};// 对应序号的字典 0-个人1-合作2-法人3-职务4-委托
         sqlRes.forEach(function(item,index){
             AmountGroup[item['baseInfo_copyrightCreateType']] = item['num'];
         });
-        console.log(AmountGroup);
+        let RawRes = {};
+        let keys = Object.keys(COPYRIGHTCREATETYPE);
+        keys.forEach(value =>
+            RawRes[value] = Number(AmountGroup[value])?Number(AmountGroup[value]):0
+        );
+        let extraDataKeys = Object.keys(extraData)
+        extraDataKeys.forEach(Month =>
+            keys.forEach(value =>
+                RawRes[value] = RawRes[value] + (Number(extraData[Month]["works"]["copyrightCreateType"][value])?Number(extraData[Month]["works"]["copyrightCreateType"][value]):0)
+            )
+        );
+        console.log("RawRes:",RawRes);
+
         CertificateAmountGroupByCreateType = {
-            "个人" : AmountGroup[0],
-            "合作" : AmountGroup[1],
-            "法人" : AmountGroup[2],
-            "职务" : AmountGroup[3],
-            "委托" : AmountGroup[4],
+            "个人" : RawRes[0],
+            "合作" : RawRes[1],
+            "法人" : RawRes[2],
+            "职务" : RawRes[3],
+            "委托" : RawRes[4]
         }
     }
     let index = 0;
@@ -394,15 +478,15 @@ async function getCertificateAmountGroupByCreateType() {
 // 4.	版权信息-copyrightType
 // 一维图（一个自变量）
 // 1)	截止当前，不同类别通证的数量分布。 copyrightType Amount
-export async function handleCopyRightAmountGroupByCopyrightType(req, res) {
+export async function handleCopyRightAmountGroupByCopyrightType(extraData) {
 
     console.time('handleCopyRightAmountGroupByCopyrightType');
-    let sqlRes = await getCopyRightAmountGroupByCopyrightType();
+    let sqlRes = await getCopyRightAmountGroupByCopyrightType(extraData);
     console.timeEnd('handleCopyRightAmountGroupByCopyrightType');
     console.log('--------------------');
     return sqlRes;
 }
-async function getCopyRightAmountGroupByCopyrightType() {
+async function getCopyRightAmountGroupByCopyrightType(extraData) {
     let CopyRightAmountGroupByIDtype = {};
     if(CONNECT == true){
         let sqlRight =util.format(
@@ -423,26 +507,38 @@ async function getCopyRightAmountGroupByCopyrightType() {
             AmountGroup[item['copyrightType']] = item['num'];
         });
         console.log(AmountGroup);
+        let RawRes = {};
+        let keys = Object.keys(COPYRIGHTTYPE);
+        keys.forEach(value =>
+            RawRes[value] = Number(AmountGroup[value])?Number(AmountGroup[value]):0
+        );
+        let extraDataKeys = Object.keys(extraData)
+        extraDataKeys.forEach(Month =>
+            keys.forEach(value =>
+                RawRes[value] = RawRes[value] + (Number(extraData[Month]["cert"]["copyrightType"][value])?Number(extraData[Month]["cert"]["copyrightType"][value]):0)
+            )
+        );
+        console.log("RawRes:",RawRes);
         CopyRightAmountGroupByIDtype = {
-            "复制权" : AmountGroup[1],
-            "发行权" : AmountGroup[2],
-            "出租权" : AmountGroup[3],
-            "展览权" : AmountGroup[4],
-            "表演权" : AmountGroup[5],
-            "放映权" : AmountGroup[6],
-            "广播"   : AmountGroup[7],
-            "信息网络传播权" : AmountGroup[8],
-            "摄制权" : AmountGroup[9],
-            "改编权" : AmountGroup[10],
-            "翻译权" : AmountGroup[11],
-            "汇编权" : AmountGroup[12],
-            "其他"   : AmountGroup[13]
+            "复制权" : RawRes[4],
+            "发行权" : RawRes[5],
+            "出租权" : RawRes[6],
+            "展览权" : RawRes[7],
+            "表演权" : RawRes[8],
+            "放映权" : RawRes[9],
+            "广播"   : RawRes[10],
+            "信息网络传播权" : RawRes[11],
+            "摄制权" : RawRes[12],
+            "改编权" : RawRes[13],
+            "翻译权" : RawRes[14],
+            "汇编权" : RawRes[15],
+            "其他"   : RawRes[16]
         }
     }
     let index = 0;
     while(index<13){
-        if(!CopyRightAmountGroupByIDtype[COPYRIGHTTYPE[index]]){
-            CopyRightAmountGroupByIDtype[COPYRIGHTTYPE[index]] = 0;
+        if(!CopyRightAmountGroupByIDtype[COPYRIGHTTYPE[index+4]]){
+            CopyRightAmountGroupByIDtype[COPYRIGHTTYPE[index+4]] = 0;
         }
         index ++;
     }
