@@ -186,7 +186,7 @@ export function getMonthTimeStampArray(MonthsAmong = 12,MonthOrWeek = true){
     const MonthName = {0:"一月",1:"二月",2:"三月",3:"四月",4:"五月",5:"六月",
                         6:"七月",7:"八月",8:"九月",9:"十月",10:"十一月",11:"十二月"}
     let now = new Date(); //当前日期 
-    let nowMonth = now.getMonth(); //当前月 
+    let nowMonth = now.getMonth(); //当前月
     let nowYear = now.getFullYear(); //当前年 
     MonthArray.push(transMonthName(now));
     TimeStampArray.push(Date.parse(now)/1000);
@@ -202,7 +202,29 @@ export function getMonthTimeStampArray(MonthsAmong = 12,MonthOrWeek = true){
     }
     return [TimeStampArray, MonthArray];
 }
+export function getMonthTimeStampArrayExternal(MonthsAmong = 12,MonthOrWeek = true){
+    let TimeStampArray = [];
+    let MonthArray = [];
 
+    const MonthName = {0:"一月",1:"二月",2:"三月",3:"四月",4:"五月",5:"六月",
+        6:"七月",7:"八月",8:"九月",9:"十月",10:"十一月",11:"十二月"}
+    let now = new Date(); //当前日期
+    let nowMonth = now.getMonth(); //当前月
+    let nowYear = now.getFullYear(); //当前年
+    MonthArray.push(transMonthName(now));
+    TimeStampArray.push(Date.parse(now));
+    for (let index = 0; index < MonthsAmong; index++) {
+        let time = new Date(nowYear, nowMonth - index);
+        let timeStart = Date.parse(time);//ms
+        MonthArray.push(transMonthName(time));
+        TimeStampArray.push(timeStart);
+        /* example:
+        * console.log("time",time,"Month",index,"timeStart",timeStart,"time.getMonth",time.getMonth());
+        * time 2021-04-30T16:00:00.000Z Month 0 timeStart 1619798400 time.getMonth 4
+        */
+    }
+    return [TimeStampArray, MonthArray];
+}
 export function getSeasonTimeStampArray(MonthsAmong = 12,MonthOrWeek = true){
     let TimeStampArray = [];
     let MonthArray = [];

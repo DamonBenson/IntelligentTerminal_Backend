@@ -1,13 +1,17 @@
 import express from 'express';
 import bodyParser from 'body-parser';
+import cors from 'cors';
 import * as authDisplayGroup from './backendProcessor/authDisplayGroup.js';
 import * as listenDisplayGroup from './backendProcessor/listenDisplayGroup.js';
 import * as httpUtils from './utils/httpUtils.js';
+import * as localUtils from './utils/localUtils.js';
 import mysql from 'mysql';
-
+import util from 'util';
 import {MOVIE_WORKTYPE, MUSIC_WORKTYPE, mysqlConf1, PICTURE_WORKTYPE} from './utils/info.js';
 import {mysqlConf2} from './utils/info.js';
+import sha256 from 'crypto-js/sha256.js';
 import fs from "fs";
+import * as mysqlUtils from "./utils/mysqlUtils.js";
 export const c1 = mysql.createConnection(mysqlConf1);
 const reconnectInterval = 5000;//5s60*60000;//1h
 const pulseInterval = 60000;//1min
@@ -18,7 +22,7 @@ const SAVEPATH = './ExtraData'
 
 //  更新版权局数据
 async function updateExtraData(savePath = SAVEPATH) {
-    const url = 'http://117.107.213.242:8151/by/queryStatisticsData';
+    const url = 'https://verify.wespace.cn/by/queryStatisticsData';
     const param = {date: ""};
     let resInfo = await httpUtils.postFormData(url, param);
     resInfo = JSON.parse(resInfo);
@@ -73,6 +77,7 @@ async function updateExtraData(savePath = SAVEPATH) {
     }
 
 }
+await updateExtraData();
 /**
  * @description 读取版权局数据
  * @returns {JSON} 北版数据JSON
@@ -84,27 +89,11 @@ function readExtraData(savePath = SAVEPATH) {
 let  extraData = readExtraData();
 console.log('北版数据读取:',JSON.stringify(extraData));
 
-// handleDisconnect(c1);
-//
-//
-// function handleDisconnect(connection) {
-//     //监听错误事件
-//     connection.on('error', function(err) {
-//         if (!err.fatal) {
-//             return;
-//         }
-//
-//         if (err.code !== 'PROTOCOL_CONNECTION_LOST') {
-//             throw err;
-//         }
-//
-//         console.log('Re-connecting lost connection: ' + err.stack);
-//
-//         connection = mysql.createConnection(connection.config);
-//         handleDisconnect(connection);
-//         connection.connect();
-//     });
-// }
+setInterval(async() => {
+    await updateExtraData();
+    extraData = readExtraData();
+    console.log('北版数据读取:',JSON.stringify(extraData));
+}, pulseInterval);
 
 
 
@@ -268,13 +257,59 @@ listenRouter.get('/Tort_AND_ClaimCountGroupByWorkType', async function(req, res)
 });
 // localhost:9181/backend/listen/Tort_AND_ClaimCountGroupByWorkType
 
+listenRouter.get('/LatestAlarm', async function(req, res) {
+    await UseMysql_c2(req, res, listenDisplayGroup.handleLatestAlarm);
+});
+// localhost:9181/backend/listen/LatestAlarm
+
 
 testRouter.get('/generateTort', async function(req, res) {
-    let now = new Date(); //当前日期
-    res.send({'data': now.getTime()});
-    res.end();
+    if(c2.state != "authenticated") {
+        console.log("监测维权数据库连接失败");
+        res.send('监测维权数据库连接失败，请联系监测终端后台开发人员');
+        res.end();
+        return;
+    }
+    else{
+        let resInfo = await httpUtils.get("https://localhost:9181/backend1");
+        console.log(resInfo);
+        let sqlRight =util.format(
+            "SELECT\n" +
+            "\tToken.baseInfo_workId , Token.baseInfo_workType\n" +
+            "FROM\n" +
+            "\tToken\n" +
+            "LIMIT 1000"
+        );
+        let resJson = await mysqlUtils.sql(c1, sqlRight);
+        const RandomMaxRange = resJson.length>999?999:resJson.length;
+
+        let workId = resJson[(localUtils.randomNumber(0,RandomMaxRange))]["baseInfo_workId"];
+        let now = new Date(); //当前日期
+        const nowTime = now.getTime();
+        sqlRight =util.format(
+            "INSERT INTO evidenceTable (workId, tortNum, tortSite, tortUrl, evidenceAddr, evidenceHash, saveTime, fixTime, workType)\n" +
+            "                       VALUES\n" +
+            "                       ( \"%s\", \"%s\",  \"网易云\", \"https://music.163.com/\",  \"%s\", \"%s\", \"%s\",  \"%s\", \"%s\")"
+            ,workId, sha256(workId+nowTime.toString()), sha256(workId+1),sha256(sha256(workId+1)).toString().slice(0,45), nowTime/1000, nowTime/1000+1, 3);
+        await mysqlUtils.sql(c2, sqlRight);
+        console.log("time: ",nowTime)
+        res.send({'data': nowTime});
+        res.end();
+    }
+
 });
 // localhost:9181/generateTort
+
+testRouter.get('/HTTPTEST', async function (req, res) {
+    let now = new Date(); //当前日期
+    const nowTime = now.getTime();
+    res.send({'data': nowTime});
+    res.end();
+
+})
+
+
+// localhost:9181/HTTPTEST
 
 /*----------http服务器配置----------*/
 
@@ -283,13 +318,28 @@ const port = 9181;
 
 app.use(bodyParser.urlencoded({extended:false}));
 app.use(bodyParser.json());
-app.get('/backend1', function (req, res) {
-    res.send('Hello World');
- })
+app.get('/backend1', async function (req, res) {
+    // await sleep(15000);
+    res.send("null");
+    res.end();
+})
+app.post('/SYSCLOCK', async function (req, res) {
+    let ReqTime = req.query.ReqTime;
+    let estimateOffset = req.query.estimateOffset;
+
+    let now = new Date().getTime();
+    let OffsetDiff = (now - estimateOffset)-ReqTime;//多偏差出多少时间
+    res.send({'OffsetDiff': OffsetDiff,
+                    'recTime': now,});
+    res.end();
+})
+// localhost:9181/SYSCLOCK
+
+app.use(cors());
 //app.js
 app.all('*', function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+    res.header("Access-Control-Allow-Headers", "Content-Type, Content-Length, Authorization, Accept, X-Requested-With , yourHeaderFeild");
     res.header("Access-Control-Allow-Methods","PUT,POST,GET,DELETE,OPTIONS");
     res.header("X-Powered-By",' 3.2.1')
     res.header("Content-Type", "application/json;charset=utf-8");

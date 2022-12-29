@@ -35,7 +35,7 @@ export async function handleTortCount(req, res) {
 async function getTortCount() {
     let tortCount = 0;
     if(CONNECT == true){
-        let Res = await  countNum(c2,"Evidence","id");
+        let Res = await  countNum(c2,"evidenceTable","id");
         tortCount = Res['num'];
     }
     else{
@@ -67,9 +67,9 @@ async function getTortWorkCount() {
         "FROM\n" +
         "\t(\n" +
         "\t\tSELECT DISTINCT\n" +
-        "\t\t\tEvidence.workid\n" +
+        "\t\t\tevidenceTable.workid\n" +
         "\t\tFROM\n" +
-        "\t\t\tEvidence\n" +
+        "\t\t\tevidenceTable\n" +
         "\t) AS Type";
         let sqlRes = await mysqlUtils.sql(c2, sqlRight);
         sqlRes.forEach(value =>
@@ -91,7 +91,7 @@ async function getTortWorkCount() {
  * @date: 2021/5/25 17:31
  * @description:不同创作类型的侵权数量随时间的变化。
  */
-export async function handleTortCountGroupByWorkTypeEXchange(req, res, SelectOption) {
+export async function evidenceTablehandleTortCountGroupByWorkTypeEXchange(req, res, SelectOption) {
 
     console.time('handleTortCountGroupByWorkTypeEXchange');
     let sqlRes = await getTortCountGroupByWorkTypeEXchange(SelectOption);
@@ -109,7 +109,7 @@ async function getTortCountGroupByWorkTypeEXchange(SelectOption) {
     if(CONNECT == true){
         // 选择3个站点
         let tortSites = [];
-        let sqlRight = gen_SqlRight(TimeStampArray[0], TimeStampArray[11], SelectOption);
+        let sqlRight = gen_SqlRight(TimeStampArray[0], TimeStampArray[12], SelectOption);
         let sqlRes = await mysqlUtils.sql(c2, sqlRight);
         sqlRes.forEach(function(item){
             tortSites.push(item["tortsite"]);
@@ -187,20 +187,20 @@ async function getTortCountGroupByWorkTypeEXchange(SelectOption) {
         }
     }
     // @param SelectOption:选择音乐、视频或者图片组。
-    function gen_SqlRight(endTimeStamp, startTimeStamp, SelectOption, tortSite = null, table = "Evidence", byKey= "tortsite"){
+    function gen_SqlRight(endTimeStamp, startTimeStamp, SelectOption, tortSite = null, table = "evidenceTable", byKey= "tortsite"){
         let sqlRight = util.format("SELECT\n" +
             "\tType.tortsite, \n" +
             "\tCOUNT(Type.workid) AS num\n" +
             "FROM\n" +
             "\t(\n" +
             "\t\tSELECT DISTINCT\n" +
-            "\t\t\tEvidence.workid, \n" +
-            "\t\t\tEvidence.tortsite \n" +
+            "\t\t\tevidenceTable.workid, \n" +
+            "\t\t\tevidenceTable.tortsite \n" +
             "\t\tFROM\n" +
-            "\t\t\tEvidence\n" +
+            "\t\t\tevidenceTable\n" +
             "\t\tWHERE\n" +
-            "\t\t\t(Evidence.timestamp <= %s AND\n" +
-            "\t\t\tEvidence.timestamp > %s )AND(\n",endTimeStamp,startTimeStamp);
+            "\t\t\t(evidenceTable.saveTime <= %s AND\n" +
+            "\t\t\tevidenceTable.saveTime > %s )AND(\n",endTimeStamp,startTimeStamp);
         SelectOption.forEach(value =>
             sqlRight = sqlRight + util.format(
                 '\t\t\t%s.workType = %s OR\n',
@@ -254,7 +254,7 @@ async function getTortCountGroupByTortSite(SelectOption) {
     if(CONNECT == true){
 
         // @param SelectOption:选择音乐、视频或者图片组。
-        function gen_SqlRight(SelectOption, limit = 3, table = "Evidence", byKey= "tortsite") {
+        function gen_SqlRight(SelectOption, limit = 3, table = "evidenceTable", byKey= "tortsite") {
             let sqlRight = util.format(
                 'SELECT\n' +
                 '\t*\n' +
@@ -358,7 +358,7 @@ async function getTortTort_AND_ClaimCountGroupByWorkType() {
     let WorkTypeInfo = {};
     let totalTortCount = 0;
     if(CONNECT == true){
-        let Res = await  countNum(c2,"Evidence","id");
+        let Res = await  countNum(c2,"evidenceTable","id");
         totalTortCount = Res['num'];
         let sqlRight = util.format("SELECT\n" +
             "\tType.workType, \n" +
@@ -366,10 +366,10 @@ async function getTortTort_AND_ClaimCountGroupByWorkType() {
             "FROM\n" +
             "\t(\n" +
             "\t\tSELECT DISTINCT\n" +
-            "\t\t\tEvidence.workid, \n" +
-            "\t\t\tEvidence.workType\n" +
+            "\t\t\tevidenceTable.workid, \n" +
+            "\t\t\tevidenceTable.workType\n" +
             "\t\tFROM\n" +
-            "\t\t\tEvidence\n" +
+            "\t\t\tevidenceTable\n" +
             "\t) AS Type\n" +
             "GROUP BY\n" +
             "\tType.workType\n" +
@@ -382,7 +382,7 @@ async function getTortTort_AND_ClaimCountGroupByWorkType() {
                 "workType":WORKTYPE[item['workType']],
                 "TortCount":item['num'],
                 "TotalTortCount": totalTortCount,
-                "ClaimCount": 0
+                "ClaimCount": item['num']
             };
             TortCountGroupByWorkType.push(WorkTypeInfo);
         });
@@ -398,7 +398,8 @@ async function getTortTort_AND_ClaimCountGroupByWorkType() {
     function _PROTECT_(TortCountGroupByWorkType){
         let selections = Object.values(WORKTYPE);
         TortCountGroupByWorkType.forEach(function (element) {
-            deleteArraryElement(element.workType.toString(), selections)
+            if(element.workType != undefined)
+            deleteArraryElement(element.workType.toString(), selections);
         });
         let needNum = (6 - TortCountGroupByWorkType.length);
         for(let i = 1;i <= needNum;i++){
@@ -418,6 +419,49 @@ async function getTortTort_AND_ClaimCountGroupByWorkType() {
 function deleteArraryElement(element, Arrary){
     let deleteIndex = Arrary.indexOf(element);
     Arrary.splice(deleteIndex,1);
+}
+/*
+ * @param req: 请求
+ * @param res: 返回
+ * @return: null
+ * @author: Bernard1
+ * @date: 2022/11/9 17:31
+ * @description:侵权实时告警。
+ */
+export async function handleLatestAlarm(req, res) {
+
+    console.time('getLatestAlarm');
+    let sqlRes = await getLatestAlarm();
+    console.timeEnd('getLatestAlarm');
+    console.log('--------------------');
+    return sqlRes;
+}
+async function getLatestAlarm() {
+    let LatestAlarm = {};
+    if(CONNECT == true){
+        let sqlRight = util.format("SELECT\n" +
+            "evidenceTable.tortSite,\n" +
+            "    evidenceTable.tortUrl,\n" +
+            "    evidenceTable.saveTime\n" +
+            "FROM\n" +
+            "evidenceTable\n" +
+            "ORDER BY\n" +
+            "evidenceTable.saveTime DESC\n" +
+            "LIMIT 20\n");
+        let sqlRes = await mysqlUtils.sql(c2, sqlRight);
+        sqlRes.forEach(function(item,index){
+            LatestAlarm[index]={
+                "tortsite": item["tortSite"],
+                "tortLink": item["tortUrl"],
+                "timestamp": item["saveTime"],
+            }
+        });
+    }
+    else{
+        return null;
+    }
+    console.log("LatestAlarm:",LatestAlarm);
+    return LatestAlarm;
 }
 
 

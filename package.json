@@ -12,6 +12,8 @@
   "dependencies": {
     "bignumber.js": "^9.1.0",
     "body-parser": "^1.19.0",
+    "cors": "^2.8.5",
+    "crypto-js": "^4.1.1",
     "express": "^4.18.1",
     "jingtum-lib": "file:local_packages/jingtum-lib",
     "moment": "^2.29.4",

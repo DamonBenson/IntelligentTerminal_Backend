@@ -214,45 +214,17 @@ const mysqlConf1 = {
 };
 // 监测维权数据库
 export const mysqlConf2 = {
-    host: '101.200.197.36',
+    // host: '101.200.197.36',
+    // user: 'blockchain',
+    // password: 'Ittc626626!',
+    // port: '3306',
+    // database: 'fake_Monitor',
+    host: '182.92.178.101',
     user: 'root',
     password: 'bupt123',
-    port: '3307',
-    database: 'CopyRightData',
+    port: '3306',
+    database: 'MonitorData',
 };
-/**
- * @Description: mysqlPoolConf: 听说可以保持连接
- * @url: https://github.com/mysqljs/mysql#pooling-connections
- * @implements  Used in the MidBackend.js
- * @author Bernard
- * @date 2021/5/24
- */
-export const mysqlPoolConf = {
-    connectionLimit : 10,
-    host: '39.102.93.47',
-    user: 'root',
-    password: 'bykyl626',
-    port: '3306',
-    useConnectionPooling: true,
-    schema:{
-        tableName: 'session',
-        columnNames:{
-            session_id: 'session_id',
-            expires: 'expires',
-            data: 'data'
-        }
-    },
-    database: 'jingtum'
-}
-// 用于测试使用的数据库，存入的数据无区块链共识
-const mysqlTestConf = {
-    host: '39.102.93.47',
-    user: 'root',
-    password: 'bykyl626',
-    port: '3306',
-    useConnectionPooling: true,
-    database: 'Fake_jingtum'
-}
 /**
  * @Description: WORKTYPE: 作品类型
  * @date 2021/5/24
@@ -336,4 +308,4 @@ const availableSellAddr = {
 
 const auditSystemAccount = userAccount[0];
 
-export {pic, chains, userAccount, userAccountIndex, userMemo, authMemo, rightTokenName, approveTokenName, mysqlConf1, mysqlTestConf, debugMode, buyOrderContractAddrs, sellOrderContractAddrs, availableSellAddr, auditSystemAccount};
+export {pic, chains, userAccount, userAccountIndex, userMemo, authMemo, rightTokenName, approveTokenName, mysqlConf1, debugMode, buyOrderContractAddrs, sellOrderContractAddrs, availableSellAddr, auditSystemAccount};

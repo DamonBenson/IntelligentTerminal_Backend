@@ -193,6 +193,8 @@ export async function handleCertificateAmountGroupByWorkTypeEXchange(extraData) 
 }
 async function getCertificateAmountGroupByWorkTypeEXchange(extraData) {
     let [TimeStampArray,MonthArray] = DateUtil.getSeasonTimeStampArray();
+    MonthArray.pop();
+    MonthArray.reverse();
     let CertificateAmountGroupByWorkTypeEXchange = [];
     let CertificateAmountGroupByWorkType = [];
     let WorkTypeInfo = {};
@@ -215,7 +217,7 @@ async function getCertificateAmountGroupByWorkTypeEXchange(extraData) {
         let extraDataKeys = Object.keys(extraData)
         extraDataKeys.forEach(Month =>
             keys.forEach(value =>
-                RawRes[value] = RawRes[value] + Number(extraData[Month]["works"]["workType"][value])
+                RawRes[value] = RawRes[value] + (Number(extraData[Month]["works"]["workType"][value])?Number(extraData[Month]["works"]["workType"][value]):0)
             )
         );
         console.log("totalres:",totalres);
@@ -255,9 +257,9 @@ async function getCertificateAmountGroupByWorkTypeEXchange(extraData) {
                 let MonthInfo = {
                     "workType":WORKTYPE[key],
                     "CertificateAmount":Res[key]
-                    + Number(extraData[index+1]["works"]["workType"][key])
-                    + Number(extraData[index+2]["works"]["workType"][key])
-                    + Number(extraData[index+3]["works"]["workType"][key]),
+                    + (Number(extraData[index*3+1]["works"]["workType"][key])?Number(extraData[index*3+1]["works"]["workType"][key]):0)
+                    + (Number(extraData[index*3+2]["works"]["workType"][key])?Number(extraData[index*3+2]["works"]["workType"][key]):0)
+                    + (Number(extraData[index*3+3]["works"]["workType"][key])?Number(extraData[index*3+3]["works"]["workType"][key]):0),
                     "Month" : MonthArray[index],
                 };
                 CertificateAmountGroupByWorkType.push(MonthInfo);
@@ -265,10 +267,10 @@ async function getCertificateAmountGroupByWorkTypeEXchange(extraData) {
             // 剩余类型并入“剩余的"类，不用其他是为了辨别
             let spareSum = 0;
             resTemp.forEach(key=>{
-                spareSum += totalres[key] +
-                + Number(extraData[index+1]["works"]["workType"][key])
-                + Number(extraData[index+2]["works"]["workType"][key])
-                + Number(extraData[index+3]["works"]["workType"][key]);
+                spareSum += Res[key]?Res[key]:0 +
+                + (Number(extraData[index*3+1]["works"]["workType"][key])?Number(extraData[index*3+1]["works"]["workType"][key]):0)
+                + (Number(extraData[index*3+2]["works"]["workType"][key])?Number(extraData[index*3+2]["works"]["workType"][key]):0)
+                + (Number(extraData[index*3+3]["works"]["workType"][key])?Number(extraData[index*3+3]["works"]["workType"][key]):0);
 
             })
             let MonthInfo = {
@@ -315,7 +317,6 @@ async function getCertificateAmountGroupByWorkTypeEXchange(extraData) {
 
     }
 
-    CertificateAmountGroupByWorkTypeEXchange.reverse();
     return CertificateAmountGroupByWorkTypeEXchange;
     function gen_SqlRight(endTimeStamp , startTimeStamp,workTypes) {
         console.log("workTypes:",workTypes);
