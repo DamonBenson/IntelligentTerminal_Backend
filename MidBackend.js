@@ -2,6 +2,8 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import * as authDisplayGroup from './backendProcessor/authDisplayGroup.js';
+import * as tokenDisplayGroup from './backendProcessor/tokenDisplayGroup.js';
+import * as certificateDisplayGroup from './backendProcessor/certificateDisplayGroup.js';
 import * as listenDisplayGroup from './backendProcessor/listenDisplayGroup.js';
 import * as httpUtils from './utils/httpUtils.js';
 import * as localUtils from './utils/localUtils.js';
@@ -168,11 +170,15 @@ async function UseMysql_c2(req, res, handle, params=null) {
 const confirmRouter = express.Router({
     caseSensitive: false,// 不区分大小写
 });
-
+const tokenRouter = express.Router({
+    caseSensitive: false,// 不区分大小写
+});
+const certificateRouter = express.Router({
+    caseSensitive: false,// 不区分大小写
+});
 const surveilanceRouter = express.Router({
     caseSensitive: false,// 不区分大小写
 });
-
 const testRouter = express.Router({
     caseSensitive: false,// 不区分大小写
 });
@@ -181,87 +187,119 @@ const testRouter = express.Router({
 confirmRouter.get('/certificateAmountGroupByWorkTypeEXchange', async function(req, res) {
     await UseMysql_c1(req, res, authDisplayGroup.handleCertificateAmountGroupByWorkTypeEXchange);
 });
-// localhost:9181/backend/confirmation/certificateAmountGroupByWorkTypeEXchange
+// localhost:9181/backend/certificateAmountGroupByWorkTypeEXchange
 
 // 作品的时间分布/月
 confirmRouter.get('/certificateAmountEXchange', async function(req, res) {
     await UseMysql_c1(req, res, authDisplayGroup.handleCertificateAmountEXchange);
 });
-// localhost:9181/backend/confirmation/certificateAmountEXchange
+// localhost:9181/backend/certificateAmountEXchange
 
 // 不同作品类型的存证分布
 confirmRouter.get('/certificateAmountGroupByWorkType', async function(req, res) {
     await UseMysql_c1(req, res, authDisplayGroup.handleCertificateAmountGroupByWorkType);
 });
-// localhost:9181/backend/confirmation/certificateAmountGroupByWorkType
+// localhost:9181/backend/certificateAmountGroupByWorkType
 
 // 不同著作权产生方式的存证分布
 confirmRouter.get('/certificateAmountGroupByCreateType', async function(req, res) {
     await UseMysql_c1(req, res, authDisplayGroup.handleCertificateAmountGroupByCreateType);
 });
-// localhost:9181/backend/confirmation/certificateAmountGroupByCreateType
+// localhost:9181/backend/certificateAmountGroupByCreateType
 
 // TODO 合作企业的存证分布
 confirmRouter.get('/certificateAmountGroupByCooperator', async function(req, res) {
     await UseMysql_c1(req, res, authDisplayGroup.handleCertificateAmountGroupByCooperator);
 });
-// localhost:9181/backend/confirmation/certificateAmountGroupByCooperator
+// localhost:9181/backend/certificateAmountGroupByCooperator
 
 // TODO 存证总数
 confirmRouter.get('/certificateCount', async function(req, res) {
-    await UseMysql_c1(req, res, authDisplayGroup.handleCertificateCount);
+    await UseMysql_c1(req, res, authDisplayGroup.handleCertificateAmount);
 });
-// localhost:9181/backend/confirmation/certificateCount
+// localhost:9181/backend/certificateCount
 
 
 /**************************/
 /****       作品通证     ****/
 /**************************/
-// 不同作品类型通证的时间分布/季
-confirmRouter.get('/certificateAmountGroupByWorkTypeEXchange', async function(req, res) {
-    await UseMysql_c1(req, res, authDisplayGroup.handleCertificateAmountGroupByWorkTypeEXchange);
+// TODO 不同作品类型通证的时间分布/季
+tokenRouter.get('/tokenAmountGroupByWorkTypeEXchange', async function(req, res) {
+    await UseMysql_c1(req, res, tokenDisplayGroup.handleTokenAmountGroupByWorkTypeEXchange);
 });
-// localhost:9181/backend/certificateAmountGroupByWorkTypeEXchange
+// localhost:9181/backend/token/tokenAmountGroupByWorkTypeEXchange
 
 // TODO 通证的时间分布/月
-confirmRouter.get('/copyRightAmountEXchange', async function(req, res) {
-    await UseMysql_c1(req, res, authDisplayGroup.handleCopyRightAmountEXchange);
+tokenRouter.get('/tokenAmountEXchange', async function(req, res) {
+    await UseMysql_c1(req, res, tokenDisplayGroup.handleTokenAmountEXchange);
 });
-// localhost:9181/backend/copyRightAmountEXchange
+// localhost:9181/backend/token/tokenAmountEXchange
 
 // TODO 不同作品类型的通证分布
-confirmRouter.get('/certificateAmountGroupByWorkType', async function(req, res) {
-    await UseMysql_c1(req, res, authDisplayGroup.handleCertificateAmountGroupByWorkType);
+tokenRouter.get('/tokenAmountGroupByWorkType', async function(req, res) {
+    await UseMysql_c1(req, res, tokenDisplayGroup.handleTokenAmountGroupByWorkType);
 });
-// localhost:9181/backend/certificateAmountGroupByWorkType
+// localhost:9181/backend/token/tokenAmountGroupByWorkType
 
 // TODO 不同著作权产生方式的通证分布
-confirmRouter.get('/certificateAmountGroupByCreateType', async function(req, res) {
-    await UseMysql_c1(req, res, authDisplayGroup.handleCertificateAmountGroupByCreateType);
+tokenRouter.get('/tokenAmountGroupByCreateType', async function(req, res) {
+    await UseMysql_c1(req, res, tokenDisplayGroup.handleTokenAmountGroupByCreateType);
 });
-// localhost:9181/backend/certificateAmountGroupByCreateType
+// localhost:9181/backend/token/tokenAmountGroupByCreateType
 
 // TODO 合作企业的通证分布
-confirmRouter.get('/certificateAmountGroupByCooperator', async function(req, res) {
-    await UseMysql_c1(req, res, authDisplayGroup.handleCertificateAmountGroupByCooperator);
+tokenRouter.get('/tokenAmountGroupByCooperator', async function(req, res) {
+    await UseMysql_c1(req, res, tokenDisplayGroup.handleTokenAmountGroupByCooperator);
 });
-// localhost:9181/backend/certificateAmountGroupByCooperator
+// localhost:9181/backend/token/tokenAmountGroupByCooperator
 
-// TODO 存证总数
-confirmRouter.get('/certificateAmountGroupByCooperator', async function(req, res) {
-    await UseMysql_c1(req, res, authDisplayGroup.handleCertificateAmountGroupByCooperator);
+// TODO 通证总数
+tokenRouter.get('/tokenAmount', async function(req, res) {
+    await UseMysql_c1(req, res, tokenDisplayGroup.handleTokenAmount);
 });
-// localhost:9181/backend/certificateAmountGroupByCooperator
+// localhost:9181/backend/token/tokenAmount
 
 
 /**************************/
 /****    数字版权证书    ****/
 /**************************/
-// 不同类别通证数量分布
-confirmRouter.get('/copyRightAmountGroupByCopyrightType', async function(req, res) {
-    await UseMysql_c1(req, res, authDisplayGroup.handleCopyRightAmountGroupByCopyrightType);
+
+// TODO 不同作品类型证书的时间分布/季
+certificateRouter.get('/certificateAmountGroupByWorkTypeEXchange', async function(req, res) {
+    await UseMysql_c1(req, res, certificateDisplayGroup.handleCertificateAmountGroupByWorkTypeEXchange);
 });
-// localhost:9181/backend/copyRightAmountGroupByCopyrightType
+// localhost:9181/backend/certificate/certificateAmountGroupByWorkTypeEXchange
+
+// TODO 证书的时间分布/月
+certificateRouter.get('/certificateAmountEXchange', async function(req, res) {
+    await UseMysql_c1(req, res, certificateDisplayGroup.handleCertificateAmountEXchange);
+});
+// localhost:9181/backend/certificate/certificateAmountEXchange
+
+// 不同著作权类型的证书分布
+certificateRouter.get('/certificateAmountGroupByCopyrightType', async function(req, res) {
+    // await UseMysql_c1(req, res, certificateDisplayGroup.handleCopyRightAmountGroupByCopyrightType);
+    await UseMysql_c1(req, res, certificateDisplayGroup.handleCertificateAmountGroupByCopyrightType);
+});
+// localhost:9181/backend/certificate/certificateAmountGroupByCopyrightType
+
+// TODO 不同著作权产生方式的证书分布
+certificateRouter.get('/certificateAmountGroupByCreateType', async function(req, res) {
+    await UseMysql_c1(req, res, certificateDisplayGroup.handleCertificateAmountGroupByCreateType);
+});
+// localhost:9181/backend/certificate/certificateAmountGroupByCreateType
+
+// TODO 合作企业的证书分布
+certificateRouter.get('/certificateAmountGroupByCooperator', async function(req, res) {
+    await UseMysql_c1(req, res, certificateDisplayGroup.handleCertificateAmountGroupByCooperator);
+});
+// localhost:9181/backend/certificate/certificateAmountGroupByCooperator
+
+// TODO 证书总数
+certificateRouter.get('/certificateAmount', async function(req, res) {
+    await UseMysql_c1(req, res, certificateDisplayGroup.handleCertificateAmount);
+});
+// localhost:9181/backend/certificate/certificateAmount
 /**************************/
 /****       监测维权     ****/
 /**************************/
@@ -395,9 +433,10 @@ app.all('*', function(req, res, next) {
 });
 
 app.use('/', testRouter);
-app.use('/backend/confirmation', confirmRouter);
-app.use('/backend/surveilance', surveilanceRouter);
-
+app.use('/backend', confirmRouter);
+app.use('/backend/token', tokenRouter);
+app.use('/backend/certificate', certificateRouter);
+app.use('/backend/listen', surveilanceRouter);
 
 /*----------启动http服务器----------*/
 

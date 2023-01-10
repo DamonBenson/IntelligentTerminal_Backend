@@ -3,7 +3,7 @@
  * @Description: 存证确权后端处理函数
  * @author Bernard
  * @date 2021/5/23
- */
+*/
 import sqlText from 'node-transform-mysql';
 
 import * as mysqlUtils from '../utils/mysqlUtils.js';
@@ -18,24 +18,24 @@ import {debugMode, WORKTYPE, COPYRIGHTTYPE, COPYRIGHTCREATETYPE} from '../utils/
 import {countGroupBy,  countNum} from "./SelectUtil.js";
 
 const CONNECT = true;// When false, Send Random Response
-// 不同作品类型存证的时间分布/季
-export async function handleCertificateAmountGroupByWorkTypeEXchange(extraData) {
+// 不同作品类型通证的时间分布/季
+export async function handleTokenAmountGroupByWorkTypeEXchange(extraData) {
 
-    console.time('handleCertificateAmountGroupByWorkTypeEXchange');
-    let sqlRes = await getCertificateAmountGroupByWorkTypeEXchange(extraData);
+    console.time('handleTokenAmountGroupByWorkTypeEXchange');
+    let sqlRes = await getTokenAmountGroupByWorkTypeEXchange(extraData);
 
 
     // let resJson = JSON.stringify(sqlRes);
-    console.timeEnd('handleCertificateAmountGroupByWorkTypeEXchange');
+    console.timeEnd('handleTokenAmountGroupByWorkTypeEXchange');
     console.log('--------------------');
     return sqlRes;
 }
-async function getCertificateAmountGroupByWorkTypeEXchange(extraData) {
+async function getTokenAmountGroupByWorkTypeEXchange(extraData) {
     let [TimeStampArray,MonthArray] = DateUtil.getSeasonTimeStampArray();
     MonthArray.pop();
     MonthArray.reverse();
-    let CertificateAmountGroupByWorkTypeEXchange = [];
-    let CertificateAmountGroupByWorkType = [];
+    let TokenAmountGroupByWorkTypeEXchange = [];
+    let TokenAmountGroupByWorkType = [];
     let WorkTypeInfo = {};
     // console.log([TimeStampArray, MonthArray]);
     if(CONNECT == true){
@@ -88,20 +88,20 @@ async function getCertificateAmountGroupByWorkTypeEXchange(extraData) {
             sqlRes.forEach(value =>
                 Res[[value["baseInfo_workType"]]] = value['num']
             );
-            CertificateAmountGroupByWorkType =[];
+            TokenAmountGroupByWorkType =[];
             for (let i = 0, n = keys.length, key; i < n; ++i) {
                 key = keys[i];
                 //空返回补0
                 if(Res[key]==null)Res[key]=0;
                 let MonthInfo = {
                     "workType":WORKTYPE[key],
-                    "CertificateAmount":Res[key]
+                    "TokenAmount":Res[key]
                         + (Number(extraData[index*3+1]["works"]["workType"][key])?Number(extraData[index*3+1]["works"]["workType"][key]):0)
                         + (Number(extraData[index*3+2]["works"]["workType"][key])?Number(extraData[index*3+2]["works"]["workType"][key]):0)
                         + (Number(extraData[index*3+3]["works"]["workType"][key])?Number(extraData[index*3+3]["works"]["workType"][key]):0),
                     "Month" : MonthArray[index],
                 };
-                CertificateAmountGroupByWorkType.push(MonthInfo);
+                TokenAmountGroupByWorkType.push(MonthInfo);
             }
             // 剩余类型并入“剩余的"类，不用其他是为了辨别
             let spareSum = 0;
@@ -114,49 +114,49 @@ async function getCertificateAmountGroupByWorkTypeEXchange(extraData) {
             })
             let MonthInfo = {
                 "workType":"剩余的",
-                "CertificateAmount":spareSum,
+                "TokenAmount":spareSum,
                 "Month" : MonthArray[index],
             };
-            CertificateAmountGroupByWorkType.push(MonthInfo);
-            CertificateAmountGroupByWorkTypeEXchange.push(CertificateAmountGroupByWorkType);
+            TokenAmountGroupByWorkType.push(MonthInfo);
+            TokenAmountGroupByWorkTypeEXchange.push(TokenAmountGroupByWorkType);
 
         }
-        console.log(CertificateAmountGroupByWorkTypeEXchange);
+        console.log(TokenAmountGroupByWorkTypeEXchange);
     }
     else{
         for (let index = 0; index < 3; index = index + SeasonGap) {
-            let CertificateAmountGroupByWorkType = [];
+            let TokenAmountGroupByWorkType = [];
 
             WorkTypeInfo = {
                 "workType":"音乐",
-                "CertificateAmount":0,
+                "TokenAmount":0,
                 "Month" : MonthArray[index + SeasonGap],
             };
-            CertificateAmountGroupByWorkType.push(WorkTypeInfo);
+            TokenAmountGroupByWorkType.push(WorkTypeInfo);
             WorkTypeInfo = {
                 "workType":"电影",
-                "CertificateAmount":0,
+                "TokenAmount":0,
                 "Month" : MonthArray[index + SeasonGap],
             };
-            CertificateAmountGroupByWorkType.push(WorkTypeInfo);
+            TokenAmountGroupByWorkType.push(WorkTypeInfo);
             WorkTypeInfo = {
                 "workType":"美术",
-                "CertificateAmount":0,
+                "TokenAmount":0,
                 "Month" : MonthArray[index + SeasonGap],
             };
-            CertificateAmountGroupByWorkType.push(WorkTypeInfo);
+            TokenAmountGroupByWorkType.push(WorkTypeInfo);
             WorkTypeInfo = {
                 "workType":"剩余的",
-                "CertificateAmount":0,
+                "TokenAmount":0,
                 "Month" : MonthArray[index + SeasonGap],
             };
-            CertificateAmountGroupByWorkType.push(WorkTypeInfo);
-            CertificateAmountGroupByWorkTypeEXchange.push(CertificateAmountGroupByWorkType);
+            TokenAmountGroupByWorkType.push(WorkTypeInfo);
+            TokenAmountGroupByWorkTypeEXchange.push(TokenAmountGroupByWorkType);
         }
 
     }
 
-    return CertificateAmountGroupByWorkTypeEXchange;
+    return TokenAmountGroupByWorkTypeEXchange;
     function gen_SqlRight(endTimeStamp , startTimeStamp,workTypes) {
         console.log("workTypes:",workTypes);
         return util.format("SELECT\n" +
@@ -167,7 +167,7 @@ async function getCertificateAmountGroupByWorkTypeEXchange(extraData) {
             "\t\t\tToken.baseInfo_workType, \n" +
             "\t\t\tCOUNT(Token.baseInfo_workId) AS num\n" +
             "\t\tFROM\n" +
-            "\t\t\Token\n" +
+            "\t\t\tToken\n" +
             "\t\tWHERE\n" +
             "\t\t\tToken.baseInfo_timestamp <= %s AND\n" +
             "\t\t\tToken.baseInfo_timestamp > %s AND\n" +
@@ -226,47 +226,47 @@ async function getCertificateAmountGroupByWorkTypeEXchange(extraData) {
     }
 }
 
-// 存证的时间分布/月
-export async function handleCertificateAmountEXchange(extraData) {
+// 通证的时间分布/月
+export async function handleTokenAmountEXchange(extraData) {
     // if(checkDBConnected()==false)return "err"
-    console.time('handleCertificateAmountEXchange');
-    let sqlRes = await getCertificateAmountEXchange(extraData);
-    console.timeEnd('handleCertificateAmountEXchange');
+    console.time('handleTokenAmountEXchange');
+    let sqlRes = await getTokenAmountEXchange(extraData);
+    console.timeEnd('handleTokenAmountEXchange');
     console.log('--------------------');
     return sqlRes;
 }
-async function getCertificateAmountEXchange(extraData) {
+async function getTokenAmountEXchange(extraData) {
     let [TimeStampArray,MonthArray] = DateUtil.getMonthTimeStampArray();
     if(true)console.log("TimeStampArray:", TimeStampArray)
     // console.log([TimeStampArray, MonthArray]);
-    let CertificateAmountEXchange = [];
+    let TokenAmountEXchange = [];
     for (let index = 0; index < 12; index++) {
         let endTimeStamp = TimeStampArray[index];
         let startTimeStamp = TimeStampArray[(index + 1)];
-        let valueRes = await countNum(c1,"Certificate", "baseInfo_workId",endTimeStamp,startTimeStamp);
+        let valueRes = await countNum(c1,"Token", "baseInfo_workId",endTimeStamp,startTimeStamp);
         if(CONNECT == false)valueRes = 0;
         let MonthInfo = {
-            "CertificateAmount": (valueRes["num"] + Number(extraData[12- index]["works"]["total"])),
+            "TokenAmount": (valueRes["num"] + Number(extraData[12- index]["works"]["total"])),
             "Month" : MonthArray[index + 1],
         };
-        CertificateAmountEXchange.push(MonthInfo);
+        TokenAmountEXchange.push(MonthInfo);
     }
-    CertificateAmountEXchange.reverse();
-    console.log(CertificateAmountEXchange);
-    return CertificateAmountEXchange;
+    TokenAmountEXchange.reverse();
+    console.log(TokenAmountEXchange);
+    return TokenAmountEXchange;
 }
 
-// 不同作品类型的存证分布
-export async function handleCertificateAmountGroupByWorkType(extraData) {
+// 不同作品类型的通证分布
+export async function handleTokenAmountGroupByWorkType(extraData) {
 
-    console.time('handleCertificateAmountGroupByWorkType');
-    let sqlRes = await getCertificateAmountGroupByWorkType(extraData);
-    console.timeEnd('handleCertificateAmountGroupByWorkType');
+    console.time('handleTokenAmountGroupByWorkType');
+    let sqlRes = await getTokenAmountGroupByWorkType(extraData);
+    console.timeEnd('handleTokenAmountGroupByWorkType');
     console.log('--------------------');
     return sqlRes;
 }
-async function getCertificateAmountGroupByWorkType(extraData) {
-    let CertificateAmountGroupByWorkType = [];
+async function getTokenAmountGroupByWorkType(extraData) {
+    let TokenAmountGroupByWorkType = [];
     let WorkTypeInfo = {};
 
     if(CONNECT == true){
@@ -286,7 +286,7 @@ async function getCertificateAmountGroupByWorkType(extraData) {
             )
         );
         console.log("RawRes:",RawRes);
-
+        
         // 字典取三个最大值
         let resTemp = Object.keys(RawRes).sort(function(a,b){ return RawRes[b] - RawRes[a];             });
         let resMax = resTemp.slice(0,3);
@@ -297,9 +297,9 @@ async function getCertificateAmountGroupByWorkType(extraData) {
         resMax.forEach(key=>{
             WorkTypeInfo = {
                 "workType":WORKTYPE[key],
-                "CertificateAmount":RawRes[key]
+                "TokenAmount":RawRes[key]
             };
-            CertificateAmountGroupByWorkType.push(WorkTypeInfo);
+            TokenAmountGroupByWorkType.push(WorkTypeInfo);
         })
         let spareNum = 0;
         resTemp.forEach(key=>{
@@ -307,25 +307,25 @@ async function getCertificateAmountGroupByWorkType(extraData) {
         })
         WorkTypeInfo = {
             "workType":"剩余的",
-            "CertificateAmount":spareNum
+            "TokenAmount":spareNum
         };
-        CertificateAmountGroupByWorkType.push(WorkTypeInfo);
-        console.log("CertificateAmountGroupByWorkType:",CertificateAmountGroupByWorkType);
+        TokenAmountGroupByWorkType.push(WorkTypeInfo);
+        console.log("TokenAmountGroupByWorkType:",TokenAmountGroupByWorkType);
     }
     else{
-        CertificateAmountGroupByWorkType = [{
-            "workType":"音乐",
-            "CertificateAmount":0
-        },{
-            "workType":"电影",
-            "CertificateAmount":0
-        },{
-            "workType":"美术",
-            "CertificateAmount":0
-        }]
+        TokenAmountGroupByWorkType = [{
+                "workType":"音乐",
+                "TokenAmount":0
+            },{
+                "workType":"电影",
+                "TokenAmount":0
+            },{
+                "workType":"美术",
+                "TokenAmount":0
+            }]
     }
 
-    return CertificateAmountGroupByWorkType;
+    return TokenAmountGroupByWorkType;
 
     async function countGroupBy(c, table, byKey){
         let sqlRight = _sqlGroupBy(table, byKey);
@@ -362,17 +362,17 @@ async function getCertificateAmountGroupByWorkType(extraData) {
     }
 }
 
-// 不同著作权产生方式的存证分布
-export async function handleCertificateAmountGroupByCreateType(extraData) {
+// 不同著作权产生方式的通证分布
+export async function handleTokenAmountGroupByCreateType(extraData) {
 
-    console.time('handleCertificateAmountGroupByCreateType');
-    let sqlRes = await getCertificateAmountGroupByCreateType(extraData);
-    console.timeEnd('handleCertificateAmountGroupByCreateType');
+    console.time('handleTokenAmountGroupByCreateType');
+    let sqlRes = await getTokenAmountGroupByCreateType(extraData);
+    console.timeEnd('handleTokenAmountGroupByCreateType');
     console.log('--------------------');
     return sqlRes;
 }
-async function getCertificateAmountGroupByCreateType(extraData) {
-    let CertificateAmountGroupByCreateType = {};
+async function getTokenAmountGroupByCreateType(extraData) {
+    let TokenAmountGroupByCreateType = {};
     if(CONNECT == true){
         let sqlRight =util.format(
             'SELECT\n' +
@@ -402,7 +402,7 @@ async function getCertificateAmountGroupByCreateType(extraData) {
         );
         console.log("RawRes:",RawRes);
 
-        CertificateAmountGroupByCreateType = {
+        TokenAmountGroupByCreateType = {
             "个人" : RawRes[0],
             "合作" : RawRes[1],
             "法人" : RawRes[2],
@@ -412,21 +412,21 @@ async function getCertificateAmountGroupByCreateType(extraData) {
     }
     let index = 0;
     while(index<5){
-        if(!CertificateAmountGroupByCreateType[COPYRIGHTCREATETYPE[index]]){
-            CertificateAmountGroupByCreateType[COPYRIGHTCREATETYPE[index]] = 0;
+        if(!TokenAmountGroupByCreateType[COPYRIGHTCREATETYPE[index]]){
+            TokenAmountGroupByCreateType[COPYRIGHTCREATETYPE[index]] = 0;
         }
         index ++;
     }
-    if(true)console.log(CertificateAmountGroupByCreateType);// 数据返回
+    if(true)console.log(TokenAmountGroupByCreateType);// 数据返回
 
-    return CertificateAmountGroupByCreateType;
+    return TokenAmountGroupByCreateType;
 }
 
-// 合作企业的存证分布
-export async function handleCertificateAmountGroupByCooperator(extraData) {
+// 合作企业的通证分布
+export async function handleTokenAmountGroupByCooperator(extraData) {
 
-    console.time('handleCertificateAmountGroupByCooperator');
-    // let sqlRes = await getCertificateAmountGroupByCooperator(extraData);
+    console.time('handleTokenAmountGroupByCooperator');
+    // let sqlRes = await getTokenAmountGroupByCooperator(extraData);
     let sqlRes = {"orgWorks":{
             "orgWorks": [
                 {
@@ -471,19 +471,19 @@ export async function handleCertificateAmountGroupByCooperator(extraData) {
                 }
             ]
         }};
-    console.timeEnd('handleCertificateAmountGroupByCooperator');
+    console.timeEnd('handleTokenAmountGroupByCooperator');
     console.log('--------------------');
     return sqlRes;
 }
-async function getCertificateAmountGroupByCooperator(extraData) {
-    let CertificateAmountGroupByCreateType = {};
+async function getTokenAmountGroupByCooperator(extraData) {
+    let TokenAmountGroupByCreateType = {};
     if(CONNECT == true){
         let sqlRight =util.format(
             'SELECT\n' +
             '\tCOUNT(Token.baseInfo_workId) AS num, \n' +
             '\tToken.baseInfo_copyrightCreateType\n' +
             'FROM\n' +
-            '\Token\n' +
+            '\tToken\n' +
             'GROUP BY\n' +
             '\tToken.baseInfo_copyrightCreateType\n' +
             'ORDER BY\n' +
@@ -506,7 +506,7 @@ async function getCertificateAmountGroupByCooperator(extraData) {
         );
         console.log("RawRes:",RawRes);
 
-        CertificateAmountGroupByCreateType = {
+        TokenAmountGroupByCreateType = {
             "个人" : RawRes[0],
             "合作" : RawRes[1],
             "法人" : RawRes[2],
@@ -516,34 +516,34 @@ async function getCertificateAmountGroupByCooperator(extraData) {
     }
     let index = 0;
     while(index<5){
-        if(!CertificateAmountGroupByCreateType[COPYRIGHTCREATETYPE[index]]){
-            CertificateAmountGroupByCreateType[COPYRIGHTCREATETYPE[index]] = 0;
+        if(!TokenAmountGroupByCreateType[COPYRIGHTCREATETYPE[index]]){
+            TokenAmountGroupByCreateType[COPYRIGHTCREATETYPE[index]] = 0;
         }
         index ++;
     }
-    if(true)console.log(CertificateAmountGroupByCreateType);// 数据返回
+    if(true)console.log(TokenAmountGroupByCreateType);// 数据返回
 
-    return CertificateAmountGroupByCreateType;
+    return TokenAmountGroupByCreateType;
 }
 
-// 存证总数
-export async function handleCertificateAmount(extraData) {
+// 通证总数
+export async function handleTokenAmount(extraData) {
 
-    console.time('handleCertificateAmount');
-    let sqlRes = 50;//await getCertificateAmount(extraData);
-    console.timeEnd('handleCertificateAmount');
+    console.time('handleTokenAmount');
+    let sqlRes = 50;//await getTokenAmount(extraData);
+    console.timeEnd('handleTokenAmount');
     console.log('--------------------');
     return sqlRes;
 }
-async function getCertificateAmount(extraData) {
-    let CertificateAmountGroupByCreateType = {};
+async function getTokenAmount(extraData) {
+    let TokenAmountGroupByCreateType = {};
     if(CONNECT == true){
         let sqlRight =util.format(
             'SELECT\n' +
             '\tCOUNT(Token.baseInfo_workId) AS num, \n' +
             '\tToken.baseInfo_copyrightCreateType\n' +
             'FROM\n' +
-            '\Token\n' +
+            '\tToken\n' +
             'GROUP BY\n' +
             '\tToken.baseInfo_copyrightCreateType\n' +
             'ORDER BY\n' +
@@ -566,7 +566,7 @@ async function getCertificateAmount(extraData) {
         );
         console.log("RawRes:",RawRes);
 
-        CertificateAmountGroupByCreateType = {
+        TokenAmountGroupByCreateType = {
             "个人" : RawRes[0],
             "合作" : RawRes[1],
             "法人" : RawRes[2],
@@ -576,12 +576,12 @@ async function getCertificateAmount(extraData) {
     }
     let index = 0;
     while(index<5){
-        if(!CertificateAmountGroupByCreateType[COPYRIGHTCREATETYPE[index]]){
-            CertificateAmountGroupByCreateType[COPYRIGHTCREATETYPE[index]] = 0;
+        if(!TokenAmountGroupByCreateType[COPYRIGHTCREATETYPE[index]]){
+            TokenAmountGroupByCreateType[COPYRIGHTCREATETYPE[index]] = 0;
         }
         index ++;
     }
-    if(true)console.log(CertificateAmountGroupByCreateType);// 数据返回
+    if(true)console.log(TokenAmountGroupByCreateType);// 数据返回
 
-    return CertificateAmountGroupByCreateType;
+    return TokenAmountGroupByCreateType;
 }
