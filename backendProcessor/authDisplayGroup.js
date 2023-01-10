@@ -243,7 +243,7 @@ async function getCertificateAmountEXchange(extraData) {
     for (let index = 0; index < 12; index++) {
         let endTimeStamp = TimeStampArray[index];
         let startTimeStamp = TimeStampArray[(index + 1)];
-        let valueRes = await countNum(c1,"Certificate", "baseInfo_workId",endTimeStamp,startTimeStamp);
+        let valueRes = await countNum(c1,"Token", "baseInfo_workId",endTimeStamp,startTimeStamp);
         if(CONNECT == false)valueRes = 0;
         let MonthInfo = {
             "CertificateAmount": (valueRes["num"] + Number(extraData[12- index]["works"]["total"])),
